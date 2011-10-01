@@ -6,7 +6,7 @@ SDL_LNFLAGS  := $(shell sdl-config --libs)
 CXXFLAGS := $(SDL_CXXFLAGS)
 LNFLAGS := $(SDL_LNFLAGS) -lSDL_ttf
 
-sdltest.bin : sdltest.o buzzer.o
+sdltest.bin : sdltest.o buzzer.o drawhelper.o quiz_interface.o
 	g++ -o $@ $(LNFLAGS) $^
   
   

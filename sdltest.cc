@@ -2,44 +2,18 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <map>
 
-#include <math.h> // for sqrt
 #include <SDL.h>
 #include <SDL_ttf.h>
 
 #include "buzzer.h"
-
-struct player{
-  std::string playerName;
-  unsigned int responseTime; // milliseconds
-  unsigned int givenAnswer; // 0: no answer given yet
-  unsigned int sumPoints; // sum of points
-};
+#include "drawhelper.h"
+#include "quiz_interface.h"
 
 
-/*
- * 0,0     ->      x    ->   screenWidth
- *
- *  |
- *  v  
- *
- *  y
- *  
- *  |
- *  v
- *
- * screenHeight
- */
 
-// todo: map of enums to SDL_Rect?
-struct screenTiling{
-  SDL_Rect questionArea;
-  SDL_Rect answerArea[4];
-  SDL_Rect answerColorArea[4];
-  SDL_Rect imageArea;
-  SDL_Rect timerArea;
-  SDL_Rect playerArea;
-};
+
 
 
 void buzz_identify(int givenButton){
@@ -82,28 +56,6 @@ void buzz_identify(int givenButton){
   } // switch
   cout << endl;
   
-}
-
-void drawSprite(SDL_Surface* target, SDL_Surface* sprite, unsigned int x, unsigned int y){
-  { // draw eevee on screen?
-    SDL_Rect DestR;
-
-    { // destination / where to draw
-      DestR.x = x;
-      DestR.y = y;
-    }
-
-    SDL_Rect SrcR;
-    { // source rectangle - if not all should be printed
-
-      SrcR.x = 5;
-      SrcR.y = 5;
-      SrcR.w = 5;
-      SrcR.h = 5;
-    }
-    
-    SDL_BlitSurface(sprite, NULL, target, &DestR);
-  }
 }
 
 Uint32 timeoutCallBack(Uint32 interval, void *param){
@@ -185,134 +137,102 @@ void printTTFVersion(std::ostream& outStream){
   }
 }  
 
-void writeOnSurface(
-  SDL_Surface* target,
-  const std::string& writeString,
-  TTF_Font* font,
-  SDL_Color color,
-  unsigned int x, unsigned int y
+unsigned int playercounter=0;
+
+quiz_player::player* keyboardPlayers[4]; // increase, later
+/*
+ * this is no real solution.. I guess, another data structure
+ * mapping all input abilities to players (and possibly back)
+ * will be needed, later
+ */
+
+quiz_player::player* identify_player(
+  SDLKey pressedKey, 
+  quiz_player::players_t& players
   )
 {
+  // SDLKey should be SDL_Keycode according to doc
+  static std::map<SDLKey,unsigned int> keyPlayerMapping;
+  if (keyPlayerMapping.empty()){
+    keyPlayerMapping[SDLK_5]=0;
+    keyPlayerMapping[SDLK_t]=0;
+    keyPlayerMapping[SDLK_g]=0;
+    keyPlayerMapping[SDLK_b]=0;
+    keyPlayerMapping[SDLK_2]=1;
+    keyPlayerMapping[SDLK_w]=1;
+    keyPlayerMapping[SDLK_s]=1;
+    keyPlayerMapping[SDLK_x]=1;
+    keyPlayerMapping[SDLK_3]=2;
+    keyPlayerMapping[SDLK_e]=2;
+    keyPlayerMapping[SDLK_d]=2;
+    keyPlayerMapping[SDLK_c]=2;
+    keyPlayerMapping[SDLK_4]=3;
+    keyPlayerMapping[SDLK_r]=3;
+    keyPlayerMapping[SDLK_f]=3;
+    keyPlayerMapping[SDLK_v]=3;
+  }
   
-  SDL_Surface *text_surface;
-  if(!(text_surface=TTF_RenderUTF8_Solid(font,writeString.c_str(),color))) {
-    //handle error here, perhaps print TTF_GetError at least
-  } else {
-
-    SDL_Rect DestR;
-
-    { // destination / where to draw
-      DestR.x = x;
-      DestR.y = y;
+  std::map<SDLKey,unsigned int>::const_iterator map_searcher;
+  map_searcher=keyPlayerMapping.find(pressedKey);
+  if (keyPlayerMapping.end()==map_searcher){
+    // key is no player
+    return NULL;
+  }
+  unsigned int keyPlayerIndex = map_searcher->second;
+  
+  if (NULL!=keyboardPlayers[keyPlayerIndex]){ // player exists
+    return keyboardPlayers[keyPlayerIndex];
+  }else{ // player must be created
+    quiz_player::player* newPlayer = new quiz_player::player;
+    std::string newPlayerNumber;
+    {
+      std::stringstream convertStream;
+      convertStream << std::dec << playercounter;
+      convertStream >> newPlayerNumber;
+      playercounter++;
     }
-    SDL_BlitSurface(text_surface,NULL,target,&DestR);
-    //perhaps we can reuse it, but I assume not for simplicity.
-    SDL_FreeSurface(text_surface);
+    newPlayer->playerName = "UnplayedNamer"+newPlayerNumber;
+    newPlayer->sumPoints = 0;
+    newPlayer->responseTime=0;
+    newPlayer->givenAnswer = 0;
+    keyboardPlayers[keyPlayerIndex]=newPlayer;
+    players.push_back(newPlayer);
+    return newPlayer;
   }
 }
-
-void writeOnSurfaceCentered(
-  SDL_Surface* target,
-  const std::string writeString,
-  TTF_Font* font,
-  SDL_Color color,
-  SDL_Rect screenArea
+unsigned int identify_answer(
+  SDLKey pressedKey
   )
 {
-  int renderedWidth;
-  int renderedHeight;
-    
-  TTF_SizeUTF8(font, writeString.c_str(), &renderedWidth, &renderedHeight);
-  
-  int emptyWidth  = (screenArea.w - renderedWidth);
-  int emptyHeight = (screenArea.h - renderedHeight);
-  
-  int outputStartLine = screenArea.y + (emptyHeight/ 2);
-  int outputStartColumn = screenArea.x + (emptyWidth / 2);
-  writeOnSurface(
-    target, writeString,font,color,
-    outputStartColumn,outputStartLine
-    );
-}
-void writeOnSurfaceVCentered(
-  SDL_Surface* target,
-  const std::string writeString,
-  TTF_Font* font,
-  SDL_Color color,
-  SDL_Rect screenArea
-  )
-{
-  int renderedHeight;
-    
-  TTF_SizeUTF8(font, writeString.c_str(), NULL, &renderedHeight);
-  
-  int emptyHeight = (screenArea.h - renderedHeight);
-  
-  int outputStartLine = screenArea.y + (emptyHeight / 2);
-  int outputStartColumn = screenArea.x;
-  writeOnSurface(
-    target, writeString,font,color,
-    outputStartColumn,outputStartLine
-    );
-}
-
-void paintRectangleOnSurface(
-  SDL_Surface* target,
-  SDL_Rect screenArea,
-  SDL_Color color
-  )
-{
-  uint32_t mappedColor = SDL_MapRGB(target->format,color.r,color.g,color.b);
-  SDL_FillRect(target,&screenArea,mappedColor);
-}
-
-
-void paintPlayer(
-  SDL_Surface* target,
-  SDL_Rect screenArea,
-  TTF_Font* font,
-  SDL_Color color,
-  player givenPlayer
-  )
-{
-  SDL_Rect pointRect=screenArea;
-  SDL_Rect nameRect =screenArea;
-  SDL_Rect timeRect =screenArea;
-  { // create subDivision
-    unsigned int subFieldHeight=screenArea.h/4;
-    pointRect.h = subFieldHeight;
-    nameRect.h = subFieldHeight;
-    timeRect.h = subFieldHeight;
-    pointRect.y = screenArea.y + 1*subFieldHeight;
-    nameRect.y = screenArea.y + 2*subFieldHeight;
-    timeRect.y = screenArea.y + 3*subFieldHeight;
-    // x and w can stay the same - for this layout
+  static std::map<SDLKey,unsigned int> keyAnswerMapping;
+  if (keyAnswerMapping.empty()){
+    keyAnswerMapping[SDLK_5]=1;
+    keyAnswerMapping[SDLK_t]=2;
+    keyAnswerMapping[SDLK_g]=3;
+    keyAnswerMapping[SDLK_b]=4;
+    keyAnswerMapping[SDLK_2]=1;
+    keyAnswerMapping[SDLK_w]=2;
+    keyAnswerMapping[SDLK_s]=3;
+    keyAnswerMapping[SDLK_x]=4;
+    keyAnswerMapping[SDLK_3]=1;
+    keyAnswerMapping[SDLK_e]=2;
+    keyAnswerMapping[SDLK_d]=3;
+    keyAnswerMapping[SDLK_c]=4;
+    keyAnswerMapping[SDLK_4]=1;
+    keyAnswerMapping[SDLK_r]=2;
+    keyAnswerMapping[SDLK_f]=3;
+    keyAnswerMapping[SDLK_v]=4;
   }
-    
-  { // points
-    std::stringstream pointStream;
-    pointStream << std::dec << givenPlayer.sumPoints;
-    writeOnSurfaceCentered(
-      target,pointStream.str(),font,color,
-      pointRect
-      );
+  std::map<SDLKey,unsigned int>::const_iterator map_searcher;
+  map_searcher=keyAnswerMapping.find(pressedKey);
+  if (keyAnswerMapping.end()==map_searcher){
+    // key is no answer
+    return 0;
+  }else{
+    return map_searcher->second;
   }
-  writeOnSurfaceCentered(
-    target,givenPlayer.playerName,font,color,
-    nameRect
-    );
-  { // time - if already an answer was given
-    if (0!=givenPlayer.givenAnswer){
-      // todo: time in other format
-      writeOnSurfaceCentered(
-        target,"te",font,color,
-        timeRect
-        );
-    }
-  }
+  
 }
-
-
 
 
 using namespace std;
@@ -333,6 +253,13 @@ int main(void){
 
   const unsigned int screenWidth  = 800;
   const unsigned int screenHeight = 600;
+  SDL_Rect fullScreen;
+  {
+    fullScreen.w=screenWidth;
+    fullScreen.h=screenHeight;
+    fullScreen.x=0;
+    fullScreen.y=0;
+  }
 
 
   SDL_Surface *screen;
@@ -362,6 +289,7 @@ int main(void){
   SDL_Color color_black = {0x00,0x00,0x00};
   SDL_Color color_white = {0xff,0xff,0xff};
   SDL_Color color_red   = {0xff,0x00,0x00};
+  SDL_Color color_green = {0x00,0xff,0x00};
   
   
   SDL_Surface* eeveepic = NULL;
@@ -379,110 +307,95 @@ int main(void){
   
   printJoystickInformation(std::cout);
 
-  
-  screenTiling myScreenTiling;
-  { // create screen Tiling
-    unsigned int currentYPos = 0; 
-    // again, note: x is column, y is line, w is width (number of columns), h is height (number of lines
-    { // question has upper quarter of screen
-      myScreenTiling.questionArea.x = 0;
-      myScreenTiling.questionArea.y = currentYPos;
-      myScreenTiling.questionArea.w = screenWidth;
-      myScreenTiling.questionArea.h = screenHeight / 4;
-      currentYPos+=myScreenTiling.questionArea.h;
+  quiz_player::players_t gamePlayers;
+
+  { // admin interface?
+    SDL_Surface *adminScreen;
+    adminScreen= SDL_SetVideoMode(screenWidth,screenHeight,16,SDL_HWSURFACE ); // |SDL_FULLSCREEN
+    if (NULL == adminScreen){
+      std::cerr << "Cant set video Mode: " << SDL_GetError() << std::endl;
+      exit (1);
     }
-    SDL_Rect answerArea;
-    const unsigned int colorAreaWidth = screenHeight / 2 / 4;
-    const unsigned int spaceBetweenColorAndAnswer=10; 
-    const unsigned int timerHeight = 30;
-    { // generic area for answers: half of the screen,  below the questions
-      answerArea.y = currentYPos;
-      answerArea.x = colorAreaWidth + spaceBetweenColorAndAnswer;
-      answerArea.w = screenWidth / 2;
-      answerArea.h = screenHeight / 2;
-      currentYPos += answerArea.h;
-    }
-    { // small answer areas, divide generic answer area
-      unsigned int currentAnswerIndex;
-      unsigned int singleAnswerHeight = answerArea.h / 4;
-      for (
-        currentAnswerIndex  = 0;
-        currentAnswerIndex  < 4;
-        currentAnswerIndex++
-        )
-      {
-        myScreenTiling.answerArea[currentAnswerIndex].y = 
-          answerArea.y +
-          singleAnswerHeight*currentAnswerIndex;
-        myScreenTiling.answerArea[currentAnswerIndex].x = answerArea.x;
-        myScreenTiling.answerArea[currentAnswerIndex].w = answerArea.w;
-        myScreenTiling.answerArea[currentAnswerIndex].h = singleAnswerHeight;
-        
-        // only thing to change is the x value and width
-        myScreenTiling.answerColorArea[currentAnswerIndex]=
-          myScreenTiling.answerArea[currentAnswerIndex];
-        myScreenTiling.answerColorArea[currentAnswerIndex].x = 0;
-        myScreenTiling.answerColorArea[currentAnswerIndex].w = colorAreaWidth;
-        
-      } // for all the small areas
-    }
-    { // image area - right from the answer area
-      myScreenTiling.imageArea.y = answerArea.y;
-      myScreenTiling.imageArea.x = 
-        answerArea.x + 
-        answerArea.w;
-      myScreenTiling.imageArea.w = screenWidth - answerArea.w;
-      myScreenTiling.imageArea.h = answerArea.h;
-    }
-    { // timer area: below the answers
-      myScreenTiling.timerArea.y = currentYPos;
-      myScreenTiling.timerArea.x = 0;
-      myScreenTiling.timerArea.w = screenWidth;
-      myScreenTiling.timerArea.h = timerHeight;
-      currentYPos += myScreenTiling.timerArea.h;
-    }
-    { // player area: remainder at the bottom
-      myScreenTiling.playerArea.y = currentYPos;
-      myScreenTiling.playerArea.x = 0;
-      myScreenTiling.playerArea.w = screenWidth;
-      myScreenTiling.playerArea.h  =
-        screenHeight - 
-        currentYPos; // rest of screen height
-      currentYPos += myScreenTiling.playerArea.h;
-    }
+    paintRectangleOnSurface(
+      adminScreen,
+      fullScreen,
+      color_red
+      );
+    /*
+     * Admin interface should support:
+     * - deleting players 
+     * - renaming players
+     * - ending the game
+     * - continuing the game
+     *
+     * Note: Adding players is possible in the admin interface but
+     * doesn't need to be a direct administrator feature: Players
+     * can join by pressing an answer key/button (in admin interface
+     * as well as in regular game). The Admin simply has to rename
+     * them.
+     *
+     * For less collision with the keys and buttons,
+     * a mouse interface seems sensible.
+     *
+     * click on players: rename
+     * click on space before players: delete
+     * special area for quit
+     * special area for continue
+     *
+     * admin interface should also blink up pressed buttons to
+     * provide a simple test ability
+     *
+     * admin interface should be called at the start
+     * of the game and between question - when requested
+     * via ESC-key.. or perhaps via red buzzer.
+     */
     
-  } // create tiling
+    SDL_Flip(adminScreen);
+    SDL_Delay(3000); // why?
+  } // admin interface
+  paintRectangleOnSurface(
+    screen,
+    fullScreen,
+    color_black
+    );
+
+  // create tiling
+  quiz_interface::screenTiling myScreenTiling = 
+    quiz_interface::getScreenTiling(
+      quiz_interface::SCREEN_LAYOUT_LIST,
+      screenWidth,
+      screenHeight
+      );
+
+  { // question
+    std::string questionString = "Fällt Dir gerade eine doofe Frage ein?";
+    SDL_Color answerColors[4]={
+      color_buzzBlue,
+      color_buzzOrange,
+      color_buzzGreen,
+      color_buzzYellow
+      };
+      std::string answerString[4]={
+        "blau - definitiv blau!",
+        "grün - es ist immer grün!",
+        "rot sieht viel besser aus!",
+        "was spricht gegen orange?"
+      };
+    writeQuestionAndAnswers(
+      screen,
+      myScreenTiling,
+      font,
+      color_black,
+      color_white,
+      answerColors,
+      questionString,
+      answerString
+      );
+
+  }
 
   
-  std::string questionString = "Fällt Dir gerade eine doofe Frage ein?";
-  { // question
-    
-    writeOnSurfaceCentered(
-      screen,questionString,font,color_white,
-      myScreenTiling.questionArea
-      );
-    paintRectangleOnSurface(screen,myScreenTiling.answerColorArea[0],color_buzzBlue);
-    writeOnSurfaceVCentered(
-      screen,"Antwort A",font,color_white,
-      myScreenTiling.answerArea[0]
-      );
-    paintRectangleOnSurface(screen,myScreenTiling.answerColorArea[1],color_buzzOrange);
-    writeOnSurfaceVCentered(
-      screen,"Antwort B",font,color_white,
-      myScreenTiling.answerArea[1]
-      );
-    paintRectangleOnSurface(screen,myScreenTiling.answerColorArea[2],color_buzzGreen);
-    writeOnSurfaceVCentered(
-      screen,"Antwort C",font,color_white,
-      myScreenTiling.answerArea[2]
-      );
-    paintRectangleOnSurface(screen,myScreenTiling.answerColorArea[3],color_buzzYellow);
-    writeOnSurfaceVCentered(
-      screen,"Antwort D",font,color_white,
-      myScreenTiling.answerArea[3]
-      );
-  }
-  
+  #ifdef CREATE_SOME_PLAYERS
   std::string newPlayerName="";
   { // getting a player name // this has to be changed
     
@@ -510,23 +423,25 @@ int main(void){
     SDL_Flip(screen);    
   }
   
-  std::vector < player > players;
-  
   { // add some random players
     unsigned int currentPlayerIndex;
     for (
       currentPlayerIndex = 0;
-      currentPlayerIndex < 8;
+      currentPlayerIndex < 0; // 8
       currentPlayerIndex++
       )
     {
-      player newPlayer;
-      newPlayer.playerName = newPlayerName+(char)(0x30+currentPlayerIndex);
-      newPlayer.sumPoints = currentPlayerIndex*100;
+      quiz_player::player* newPlayer = new quiz_player::player;
+      newPlayer->playerName = newPlayerName+(char)(0x30+currentPlayerIndex);
+      newPlayer->sumPoints = currentPlayerIndex*100;
       players.push_back(newPlayer);
     }
   } // add some random players
-    
+  #endif // CREATE_SOME_PLAYERS
+  
+  
+  
+  
   unsigned int evoliX=320;
   unsigned int evoliY=240;
   drawSprite(screen,eeveepic,evoliX,evoliY);
@@ -536,14 +451,14 @@ int main(void){
   SDL_Event myEvent;
   SDL_TimerID my_timer_id = SDL_AddTimer(1000, timeoutCallBack, NULL);
   { // clear all given answers
-    std::vector<player>::iterator player_iterator;
+    quiz_player::players_t::iterator player_iterator;
     for (
-      player_iterator  = players.begin();
-      player_iterator != players.end();
+      player_iterator  = gamePlayers.begin();
+      player_iterator != gamePlayers.end();
       player_iterator++
       )
     {
-      player_iterator->givenAnswer = 0;
+      (*player_iterator)->givenAnswer = 0;
     }
   }
    
@@ -557,15 +472,38 @@ int main(void){
       continue;
     }
     if (SDL_KEYDOWN==myEvent.type){
-      cout << "KeyDown";
-      
       
       SDL_KeyboardEvent myKeyEvent = myEvent.key;
-      if (SDLK_q == myKeyEvent.keysym.sym){
-        cout << "Q: Terminate!" << endl;
+      SDLKey adminKey = SDLK_ESCAPE;
+      if (adminKey == myKeyEvent.keysym.sym){
+        cout << "ESC: Terminate (later: admin)!" << endl;
         break;
       }
-      cout << endl;
+      quiz_player::player* keyPlayer = identify_player(
+        myKeyEvent.keysym.sym,
+        gamePlayers
+        );
+      if (NULL!=keyPlayer){
+        unsigned int reaction_time = SDL_GetTicks() - ticks_at_start;
+        unsigned int givenAnswer = identify_answer(
+          myKeyEvent.keysym.sym
+          );
+        // if player is valid, answer automatically is
+        // we could create a single map-structure instead of two
+        if (keyPlayer->givenAnswer==0){ // or re-answering allowed
+          keyPlayer->responseTime = reaction_time;
+          keyPlayer->givenAnswer = givenAnswer;
+          quiz_interface::paintAllPlayers(
+            screen,
+            myScreenTiling.playerArea,
+            font,
+            color_black,
+            color_white,
+            gamePlayers
+            );
+        }
+        SDL_Flip(screen);
+      }
     }
     if (SDL_JOYBUTTONDOWN == myEvent.type){
       unsigned int reaction_time = SDL_GetTicks() - ticks_at_start;
@@ -628,94 +566,27 @@ int main(void){
       
     }
     if (SDL_MOUSEBUTTONDOWN == myEvent.type){
-      { // print players - this function could be moved 1:1
-        unsigned int playerCount = players.size();
-        if (0==playerCount){ // prevent div by zero
-          paintRectangleOnSurface(
-            screen,
-            myScreenTiling.playerArea,
-            color_red
-            );
-          continue;
-        }
-        
-        // clear area
-        paintRectangleOnSurface(
-          screen,
-          myScreenTiling.playerArea,
-          color_black
-          );
-        /*
-         * Reality Check:
-         * 1 Player -> 1 row (1-1)/4+1 = 1
-         * 4 Players -> 1 row (4-1)/4+1 = 1
-         * 5 players -> 2 rows
-         * 8 players -> 2 rows
-         *
-         * we could make the "4" customizable, later
-         */
-        unsigned int playersPerRow=4;
-         
-        SDL_Rect currentPlayerRect;
-        { // prepare rectangle
-          unsigned int numberOfLines = (playerCount-1) / playersPerRow +1;
-          currentPlayerRect.x = myScreenTiling.playerArea.x;
-          currentPlayerRect.y = myScreenTiling.playerArea.y;
-          currentPlayerRect.w = myScreenTiling.playerArea.w / playersPerRow;;
-          currentPlayerRect.h = myScreenTiling.playerArea.h / numberOfLines;
-        }
-        
-        std::vector<player>::const_iterator player_iterator;
-        for (
-          player_iterator  = players.begin();
-          player_iterator != players.end();
-          player_iterator++ 
-          )
-        {
-          paintPlayer(screen,currentPlayerRect,font,color_white,*player_iterator);
-          currentPlayerRect.x += currentPlayerRect.w; // move to right
-          if (currentPlayerRect.x >= myScreenTiling.playerArea.x+myScreenTiling.playerArea.w){ // overflow
-            currentPlayerRect.y += currentPlayerRect.h;
-            currentPlayerRect.x = myScreenTiling.playerArea.x;
-          }
-        } // for all players
-      }
-      SDL_Flip(screen);
     }
     if (SDL_USEREVENT == myEvent.type){
       remain_seconds--;
       std::stringstream output;
       output << "noch " << remain_seconds << " Sekunden";
-      paintRectangleOnSurface(
+      if (0==remain_seconds){
+        SDL_RemoveTimer(my_timer_id);
+        output.str("Frage vorbei!");
+      }
+      quiz_interface::paintRemainingTime(
         screen,
         myScreenTiling.timerArea,
-        color_red
+        font,
+        output.str(),
+        20, // maximum of 20 seconds
+        remain_seconds,
+        color_black,
+        color_white,
+        color_red,
+        color_green
         );
-      SDL_Rect remainRect = myScreenTiling.timerArea;
-      remainRect.w = remainRect.w * remain_seconds/20;
-      paintRectangleOnSurface(
-        screen,
-        remainRect,
-        color_buzzGreen
-        );
-      
-      
-      if (0<remain_seconds){
-        writeOnSurface(
-          screen,
-          output.str(),
-          font,
-          color_white,
-          0,myScreenTiling.timerArea.y);
-      } else{// oder schon alle beantwortet
-        writeOnSurface(
-          screen,
-          "Frage vorbei!",
-          font,
-          color_white,
-          0,myScreenTiling.timerArea.y);
-          SDL_RemoveTimer(my_timer_id);
-      }
       SDL_Flip(screen);
     }
     if (remain_seconds == 0){
