@@ -76,6 +76,12 @@ Still, it can be quite some fun, so you might want to
 check it out:
 http://www.familie-siegert.de/musik.htm
 
+It seems like quizxpress also focusses on quizzes and supports
+the buzzers. I haven't yet tried it. It's commercial software.
+http://www.quizxpress.com/
+
+
+
 We had a huge laugh as we put some Zelda-Soundtrack-CDs into
 a playlist and watched in horror how some huge Zelda-fan
 identified most of them in the first few seconds - He
