@@ -1,0 +1,10 @@
+<!ELEMENT questions (question*)>
+
+<!ELEMENT question (questionString,answerString+)>
+
+<!ELEMENT questionString (#PCDATA)>
+
+<!ELEMENT answerString (#PCDATA)>
+<!ATTLIST answerString
+  correctAnswer (true | false) "false">
+

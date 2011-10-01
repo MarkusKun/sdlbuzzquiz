@@ -1,0 +1,139 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE questions SYSTEM "questions.dtd">
+<questions>
+  <question>
+    <questionString>5+7</questionString>
+    <answerString>22</answerString>
+    <answerString correctAnswer="true">12</answerString>
+    <answerString>47</answerString>
+    <answerString>39</answerString>
+  </question>
+  <question>
+    <questionString>Pokemon mit Nationaldex-Nummer 26</questionString>
+    <answerString>Evoli</answerString>
+    <answerString>Mauzi</answerString>
+    <answerString correctAnswer="true">Raichu</answerString>
+    <answerString>Snobilikat</answerString>
+  </question>
+  <question>
+    <questionString>Who Is Presently The President Of The Football Association?</questionString>
+    <answerString>Joseph S. Blatter</answerString>
+    <answerString correctAnswer="true">Prince William</answerString>
+    <answerString>Edward „Eddie“ Johnson</answerString>
+    <answerString>Stefan Kiessling</answerString>
+  </question>
+  <question>
+    <questionString>Thomas the boy's name means what?</questionString>
+    <answerString>Gift Of God</answerString>
+    <answerString>Pure</answerString>
+    <answerString>Respectable</answerString>
+    <answerString correctAnswer="true">Twin</answerString>
+  </question>
+  <question>
+    <questionString>What Are Goldie &amp; Isis?</questionString>
+    <answerString>Charlie Sheen's daughters' names</answerString>
+    <answerString>Names rooms in the Taj Mahal</answerString>
+    <answerString>Positions in women's socker</answerString>
+    <answerString correctAnswer="true">Reserve Boats For The Boat Race</answerString>
+  </question>
+  <question>
+    <questionString>In Which County Is Lord's Cricket Ground?</questionString>
+    <answerString correctAnswer="true">Middlesex</answerString>
+    <answerString>Aberdeenshire</answerString>
+    <answerString>Limerick</answerString>
+    <answerString>Essex</answerString>
+  </question>
+  <question>
+    <questionString>April 1889 Saw The Birth Of Which Future Dictator?</questionString>
+    <answerString>Muammar al-Qaddafi</answerString>
+    <answerString>Daniele Manin</answerString>
+    <answerString correctAnswer="true">Adolf Hitler</answerString>
+    <answerString>Hu Shi</answerString>
+  </question>
+  <question>
+    <questionString>An aubade or an alborda is what kind of song?</questionString>
+    <answerString correctAnswer="true">Mourning</answerString>
+    <answerString>Wedding</answerString>
+    <answerString>Birthday</answerString>
+    <answerString>Christian</answerString>
+  </question>
+  <question>
+    <questionString>Which Chain Of Health Food Shops Was Founded In 1870 And Has Over 500 Stores In The UK?</questionString>
+    <answerString>Barnes &amp; Noble</answerString>
+    <answerString>Harrods</answerString>
+    <answerString correctAnswer="true">Holland &amp; Barrett</answerString>
+    <answerString>Marks &amp; Spencer</answerString>
+  </question>
+  <question>
+    <questionString>Who designed Princess Dianna's wedding dress?</questionString>
+    <answerString>Coco Chanel</answerString>
+    <answerString correctAnswer="true">David and Elizabeth Emanuel</answerString>
+    <answerString>Alfred Angelo Sapphire</answerString>
+    <answerString>Kenneth Pool</answerString>
+  </question>
+  <question>
+    <questionString>Which famous land mark is a couple of hundred yards from the A 303?</questionString>
+    <answerString>Niagara Falls</answerString>
+    <answerString>Statue of Liberty</answerString>
+    <answerString>Potala Palace</answerString>
+    <answerString correctAnswer="true">Stone Henge</answerString>
+  </question>
+  <question>
+    <questionString>Von wem wird der rosarote Panther gejagt?</questionString>
+    <answerString>Sherlock Holmes</answerString>
+    <answerString correctAnswer="true">Inspektor Clouseau</answerString>
+    <answerString>Sam Spade</answerString>
+    <answerString>Hercule Poirot</answerString>
+  </question>
+  <question>
+    <questionString>Welchen ungewöhnlichen Beruf übte der Gallier Obelix aus?</questionString>
+    <answerString correctAnswer="true">Hinkelsteinproduzent</answerString>
+    <answerString>Physiotherapeut</answerString>
+    <answerString>Schlosser</answerString>
+    <answerString>Fischer</answerString>
+  </question>
+  <question>
+    <questionString>In welcher Stadt hat das ZDF seinen Sitz?</questionString>
+    <answerString>Düsseldorf</answerString>
+    <answerString>Bremen</answerString>
+    <answerString>Stuttgart</answerString>
+    <answerString correctAnswer="true">Mainz</answerString>
+  </question>
+  <question>
+    <questionString>Wie heißt die Darstellerin der Dana Scully aus der Serie Akte X?</questionString>
+    <answerString>Hester Thomas</answerString>
+    <answerString correctAnswer="true">Gillian Anderson</answerString>
+    <answerString>Mabel Leaf</answerString>
+    <answerString>Ireen Shear</answerString>
+  </question>
+  <question>
+    <questionString>Was will der kleine grüne Drachen Grisu werden?</questionString>
+    <answerString correctAnswer="true">Feuerwehrmann</answerString>
+    <answerString>schnell wie der Wind</answerString>
+    <answerString>Tiefseetaucher</answerString>
+    <answerString>flugfähig</answerString>
+  </question>
+  <question>
+    <questionString>Welches Quartett sang so falsch, dass eine ganze Räuberbande flüchtete?</questionString>
+    <answerString>Tic Tac Toe</answerString>
+    <answerString>No Angels</answerString>
+    <answerString>Beatles</answerString>
+    <answerString correctAnswer="true">Bremer Stadtmusikanten</answerString>
+  </question>
+
+</questions>
+
+<!--
+
+  <question>
+    <questionString></questionString>
+    <answerString></answerString>
+    <answerString correctAnswer="true"></answerString>
+    <answerString></answerString>
+    <answerString></answerString>
+  </question>
+
+
+
+
+-->
