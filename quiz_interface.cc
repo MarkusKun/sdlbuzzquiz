@@ -464,6 +464,36 @@ bool quiz_interface::callInterface(
     exit (1);
   }
   screenTiling myScreenTiling=getScreenTiling(SCREEN_LAYOUT_LIST,screenWidth,screenHeight);
+  #define QUESTION_SHUFFLE_ANSWERS
+  #ifdef QUESTION_SHUFFLE_ANSWERS
+  { // shuffle answers
+    const unsigned int SHUFFLETIMES = 20; 
+    unsigned int shuffleCount;
+    for (
+      shuffleCount  = 0;
+      shuffleCount  < SHUFFLETIMES;
+      shuffleCount++
+      )
+    {
+      unsigned int leftHand  = (rand()*1.0)/RAND_MAX * 4;
+      unsigned int rightHand = (rand()*1.0)/RAND_MAX * 4;
+      
+      std::string tempAnswer = currentQuestion.answerStrings[leftHand];
+      currentQuestion.answerStrings[leftHand]  = currentQuestion.answerStrings[rightHand];
+      currentQuestion.answerStrings[rightHand] = tempAnswer;
+      
+      if (currentQuestion.correctAnswerIndex == leftHand+1){
+        // correct answer was left, now is right
+        currentQuestion.correctAnswerIndex = rightHand+1;
+      }
+      else if (currentQuestion.correctAnswerIndex == rightHand+1){
+        // correct answer was right, now is left
+        currentQuestion.correctAnswerIndex = leftHand+1;
+      }
+    } // switch places for some times
+  }
+  #endif // QUESTION_SHUFFLE_ANSWERS
+  
   { // write the question and available answers
     writeQuestionAndAnswers(
       questionScreen,

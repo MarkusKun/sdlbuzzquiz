@@ -120,7 +120,8 @@ quiz_player::player::player(std::string newPlayerName)
 
 void quiz_player::players::calculatePoints(const unsigned int correctAnswerIndex){
   // a real point distribution still has to be found
-  std::multimap<unsigned int, player*> timeSortedPlayers;
+  std::multimap<unsigned int, player*> timeSortedCorrectPlayers;
+  std::multimap<unsigned int, player*> timeSortedInCorrectPlayers;
   { // create timesorted list of players
     std::map<quiz_sources::playerSource,player*>::const_iterator player_iterator;
     for (
@@ -131,24 +132,40 @@ void quiz_player::players::calculatePoints(const unsigned int correctAnswerIndex
     {
       player* currentPlayer = player_iterator->second;
       if (correctAnswerIndex == currentPlayer->givenAnswer){ // player has answered, correctly
-        timeSortedPlayers.insert (std::pair<unsigned int, player*>(currentPlayer->responseTime,currentPlayer));
-      }
-    }
+        timeSortedCorrectPlayers.insert (std::pair<unsigned int, player*>(currentPlayer->responseTime,currentPlayer));
+      }else{ // not correct answer
+        if (0==currentPlayer->givenAnswer){ // no answer given
+          // award no negative points
+        }else{ // wrong answer given
+          timeSortedInCorrectPlayers.insert (std::pair<unsigned int, player*>(currentPlayer->responseTime,currentPlayer));
+        }
+      } // not correct answer
+    } // for all players
   }
   { // now award points according to this list
     std::multimap<unsigned int, player*>::const_iterator player_iterator;
-    unsigned int player_points = 1000;
+    int player_points = 1000;
     for (
-      player_iterator  = timeSortedPlayers.begin();
-      player_iterator != timeSortedPlayers.end();
+      player_iterator  = timeSortedCorrectPlayers.begin();
+      player_iterator != timeSortedCorrectPlayers.end();
       player_iterator++
       )
     {
       player* currentPlayer = player_iterator->second;
-      
       // this number has to get time/order-dependent
-      currentPlayer->plusPoints += player_points;
+      currentPlayer->plusPoints = player_points;
       player_points /= 2;
+    }
+    player_points=1; // no penalty for incorrect answer
+    for (
+      player_iterator  = timeSortedInCorrectPlayers.begin();
+      player_iterator != timeSortedInCorrectPlayers.end();
+      player_iterator++
+      )
+    {
+      player* currentPlayer = player_iterator->second;
+      // this number may get configurable
+      currentPlayer->plusPoints = player_points;
     }
   }
 }

@@ -177,12 +177,17 @@ int main(void){
   
   quiz_question::questions::const_iterator question_iterator;
   
-  for (
-    question_iterator  = myQuestions.begin();
-    question_iterator != myQuestions.end();
-    question_iterator++
-    )
-  {
+  srand((unsigned)time(0)); // seed the RNG
+    
+  while (!myQuestions.empty()){
+    unsigned int currentQuestionIndex=0;
+    //#define QUESTIONS_RANDOM_ORDER
+    #ifdef QUESTIONS_RANDOM_ORDER
+    {
+      currentQuestionIndex = (rand()*1.0)/RAND_MAX * myQuestions.size();
+    }
+    #endif // QUESTIONS_RANDOM_ORDER
+    
     // todo: choose question randomly
     if (callAdmin){ // admin interface?
       if (adminInterface::callInterface(
@@ -201,7 +206,7 @@ int main(void){
       }
       callAdmin=false;
     } // admin interface
-    quiz_question::question currentQuestion = *question_iterator;
+    quiz_question::question currentQuestion = myQuestions[currentQuestionIndex];
     #ifdef STATIC_QUESTION
     { // create question
       currentQuestion.questionString = "Welche Zahl kommt Pi am nächsten?";
@@ -230,9 +235,34 @@ int main(void){
         callAdmin=true;
       }
     }
+    
+    { // erase question from game
+      quiz_question::questions::iterator del_iterator = myQuestions.begin();
+      del_iterator += currentQuestionIndex;
+      myQuestions.erase(del_iterator);
+    }
+    
   } // while not terminate game
       
   SDL_Delay(500); // why?
+  { // print final scores
+    
+    // TODO: Move to a graphical part.. perhaps start admin interface one last time.
+    
+    quiz_player::players_t playerList = gamePlayers.getPlayerList();
+    
+    cout << "Game had " << playerList.size() << " players at the end" << endl;
+    
+    quiz_player::players_t::const_iterator player_iterator;
+    for (
+      player_iterator  = playerList.begin();
+      player_iterator != playerList.end();
+      player_iterator++
+      )
+    {
+      cout << ((*player_iterator)->playerName) << " : " << ((*player_iterator)->sumPoints) << endl;
+    } // for all players
+  }
   SDL_Quit();
   TTF_Quit();
   return 0;
