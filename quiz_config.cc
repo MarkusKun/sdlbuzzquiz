@@ -16,8 +16,22 @@ quiz_config::quiz_config(){
   randomize_answers   = true;
   preshow_answers     = false;
   allow_redecision    = false;
-  points_for_correct_after = 1;
-  points_for_incorrect_after = 0;
+  reuse_questions     = true;
+  points_for_correct.push_back(0);
+  points_for_incorrect.push_back(0);
+  points_for_nothing = 0;
+  questionTime = 15;
+  answerTime = 6;
+  earlyFinish         = true;
+  
+}
+
+int convertInteger(std::string textValue){
+  int returnValue;
+  std::stringstream convertStream;
+  convertStream << textValue;
+  convertStream >> std::dec >> returnValue;
+  return returnValue;
 }
 
 bool convertBoolean(std::string textValue){
@@ -27,11 +41,72 @@ bool convertBoolean(std::string textValue){
   if ("false" == textValue){
     return false;
   }
-  
   std::cerr << "Value " << textValue << " not accepted as boolean" << std::endl;
-  
   return false;
 }
+
+void quiz_config::extractScoring(rapidxml::xml_node<>* scoringNode){
+  // before reading new scoring, delete the old one
+  points_for_correct.clear();
+  points_for_incorrect.clear();
+  points_for_nothing = 0;
+  rapidxml::xml_node<>* scoreElement;
+  for (
+    scoreElement  = scoringNode->first_node();
+    scoreElement != NULL;
+    scoreElement  = scoreElement->next_sibling()
+    )
+  {
+    std::string configName = scoreElement->name();
+    std::string configValue = scoreElement->value();
+    if ("correct" == configName){
+      points_for_correct.push_back(convertInteger(configValue));
+    }
+    else if ("incorrect" == configName){
+      points_for_incorrect.push_back(convertInteger(configValue));
+    }
+    else if ("nothing" == configName){
+      points_for_nothing = convertInteger(configValue);
+    }
+    else{
+      std::cerr << "Unknown scoring option: " << configName << std::endl;
+    }
+  }
+  // if no scoring is given, assume zero points
+  if (points_for_correct.empty()){
+    points_for_correct.push_back(0);
+  }
+  if (points_for_incorrect.empty()){
+    points_for_incorrect.push_back(0);
+  }
+}
+void quiz_config::extractTiming(rapidxml::xml_node<>* configNode){
+  rapidxml::xml_node<>* configElement;
+  for (
+    configElement  = configNode->first_node();
+    configElement != NULL;
+    configElement  = configElement->next_sibling()
+    )
+  {
+    std::string configName = configElement->name();
+    std::string configValue = configElement->value();
+    #ifdef DEBUG_CONFIGREADER
+    std::cout << configName << " -> " << configValue << std::endl;
+    #endif
+    if ("questionTime" == configName){
+      questionTime = convertInteger(configValue);
+    }
+    else if("answerTime" == configName){
+      answerTime = convertInteger(configValue);
+    }
+    else if("earlyFinish" == configName){
+      earlyFinish = convertBoolean(configValue);
+    }
+    else{
+      std::cerr << "Unknown Configuration Option: " << configName << std::endl;
+    }
+  }
+} // function extractTiming
 
 void quiz_config::extractConfig(rapidxml::xml_node<>* configNode){
   rapidxml::xml_node<>* configElement;
@@ -58,14 +133,61 @@ void quiz_config::extractConfig(rapidxml::xml_node<>* configNode){
     else if("allow_redecision" == configName){
       allow_redecision = convertBoolean(configValue);
     }
+    else if("reuse_questions" == configName){
+      reuse_questions = convertBoolean(configValue);
+    }
     else if("import" == configName){
       read(configValue);
+    }
+    else if ("scoring" == configName){
+      extractScoring(configElement);
+    }
+    else if ("timing" == configName){
+      extractTiming(configElement);
     }
     else{
       std::cerr << "Unknown Configuration Option: " << configName << std::endl;
     }
   }
   
+}
+
+void quiz_config::extractQuestions(rapidxml::xml_node<>* configNode){
+  using namespace rapidxml;
+  xml_node<>* questionElement;
+  for (
+    questionElement  = configNode->first_node("question");
+    questionElement != NULL;
+    questionElement  = questionElement->next_sibling("question")
+    )
+  {
+    quiz_question::question newQuestion;
+    
+    xml_node<>* questionStringElem = questionElement->first_node("questionString");
+    if (NULL == questionStringElem){
+      std::cerr << "Question had no question" << std::endl;
+      return;
+    }
+    newQuestion.questionString = questionStringElem->value();
+    unsigned int answerIndex=1;
+    xml_node<>* answerStringElem;
+    for (
+      answerStringElem  = questionElement->first_node("answerString");
+      answerStringElem != NULL;
+      answerStringElem  = answerStringElem->next_sibling("answerString"), answerIndex++
+      )
+    {
+      if (answerIndex > 4){
+        std::cerr << "too many answers" << std::endl;
+        break;
+      }
+      newQuestion.answerStrings[answerIndex-1]=answerStringElem->value();
+      if (NULL != answerStringElem->first_attribute("correctAnswer")){
+        newQuestion.correctAnswerIndex = answerIndex;
+      }
+    }
+    quizQuestions.push_back(newQuestion);
+  } // for all "question" element
 }
 
 
@@ -103,8 +225,9 @@ void quiz_config::read(std::string xmlfilename){
   }
   xml_node<>* rootElement = doc.first_node();
   if ("questions" == (std::string)(rootElement->name())){
-    // jump into question reader TODO
+    extractQuestions(rootElement);
   }
+  
   else if ("gameconfig" == (std::string)(rootElement->name())){
     #ifdef DEBUG_CONFIGREADER
     std::cout << "gameconfig-rootelem found" << std::endl;

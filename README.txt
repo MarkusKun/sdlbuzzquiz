@@ -124,6 +124,51 @@ Button: Player names, score, reaction times, chosen answer.
 Configuration:
 Configuration is done with xml-files. More information follows.
 
+randomize_questions (true,false):
+I guess, in most cases you'd want the questions randomized so that each game is 
+different.
+However, if you have several teams that should go through the same sequence of
+questions, you may set this to false - so the questions are presented in the order they were read.
+
+randomize_answers (true,false);
+Sometimes you may think "I know this questions! I don't remember the correct answer
+but it was the green one!". In order to foil that kind of thinking, the
+answers may be randomized. 
+
+preshow_answers (true,false):
+If this is set to true, the given answer is presented, even if time
+has not yet run out. This may bring other players to answer the same way.
+Some people consider it more "fun" to just find out what everyone answered
+after the question is over. Choose what you desire. "true" is required for
+the "Eins, zwei oder Drei"-mode
+
+allow_redecision (true, false):
+Sometimes, you answer too quickly and remember just a moment too late that
+the answer is another one.. Or having three other players choosing "blue" after
+you chose "orange" may make you think (of course, this is, where preshow_answers comes
+in handy) and want to switch. 
+If allow_redecision is set to true, your first answer is not chiselled in stone. 
+You may switch afterwards. This is required for the "Eins, zwei oder Drei"-mode
+
+reuse_questions (true,false):
+If this is set to true, questions are not erased after being displayed, once. They
+are kept and may be displayed again, later. If questions are randomized, they even
+may appear several times in a row. If questions are not randomized, the archive
+of questions is "circled".
+Setting this to false exits the game once all questions have been used. If
+you want to have some "party-mode", set this to true for forever-gaming.
+
+scoring:
+"correct" is the number of points players get for getting correctly. The order
+in which the "correct"-Tags are given in the config is the order in which
+players get points - so the quickest player gets the points that are
+first in list.
+Note: After this "queue" has been used up, additional correct players
+get the number of points that are given in the "last" tag.
+Same for "incorrect" (for players giving incorrect answers)
+
+
+
 Adding questions:
 The questions are contained in xml-files. More information follows.
 

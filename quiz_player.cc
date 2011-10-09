@@ -2,7 +2,12 @@
 #include <iostream>
 
 #include <utility> // for pair
+#include <set>
+
+#include "quiz_config.h"
 #include "quiz_player.h"
+
+extern quiz_config::quiz_config myQuizConfig;
 
 void quiz_player::players::clearAnswers(){
   std::map<quiz_sources::playerSource,player*>::iterator player_iterator;
@@ -113,7 +118,7 @@ std::string quiz_player::players::debugPrintKnown(){
 }
   
 quiz_player::player::player(std::string newPlayerName) 
-: playerName(newPlayerName), responseTime(0), givenAnswer(0), sumPoints(0)
+: playerName(newPlayerName), responseTime(0), givenAnswer(0), sumPoints(0), plusPoints(0)
 {
   // again, no constructor body needed
 }
@@ -122,6 +127,7 @@ void quiz_player::players::calculatePoints(const unsigned int correctAnswerIndex
   // a real point distribution still has to be found
   std::multimap<unsigned int, player*> timeSortedCorrectPlayers;
   std::multimap<unsigned int, player*> timeSortedInCorrectPlayers;
+  std::set<player*> nonAnswerPlayers;
   { // create timesorted list of players
     std::map<quiz_sources::playerSource,player*>::const_iterator player_iterator;
     for (
@@ -135,6 +141,7 @@ void quiz_player::players::calculatePoints(const unsigned int correctAnswerIndex
         timeSortedCorrectPlayers.insert (std::pair<unsigned int, player*>(currentPlayer->responseTime,currentPlayer));
       }else{ // not correct answer
         if (0==currentPlayer->givenAnswer){ // no answer given
+          nonAnswerPlayers.insert(currentPlayer);
           // award no negative points
         }else{ // wrong answer given
           timeSortedInCorrectPlayers.insert (std::pair<unsigned int, player*>(currentPlayer->responseTime,currentPlayer));
@@ -144,30 +151,52 @@ void quiz_player::players::calculatePoints(const unsigned int correctAnswerIndex
   }
   { // now award points according to this list
     std::multimap<unsigned int, player*>::const_iterator player_iterator;
-    int player_points = 1000;
-    for (
-      player_iterator  = timeSortedCorrectPlayers.begin();
-      player_iterator != timeSortedCorrectPlayers.end();
-      player_iterator++
-      )
-    {
-      player* currentPlayer = player_iterator->second;
-      // this number has to get time/order-dependent
-      currentPlayer->plusPoints = player_points;
-      player_points /= 2;
+    std::vector<int>::const_iterator score_iterator;
+    
+    { // points for correct
+      score_iterator = myQuizConfig.points_for_correct.begin();
+      for (
+        player_iterator  = timeSortedCorrectPlayers.begin();
+        player_iterator != timeSortedCorrectPlayers.end();
+        player_iterator++,score_iterator++
+        )
+      {
+        if (myQuizConfig.points_for_correct.end()==score_iterator){
+          score_iterator--;
+        }
+        player* currentPlayer = player_iterator->second;
+        
+        currentPlayer->plusPoints = (*score_iterator);
+      }
     }
-    player_points=1; // no penalty for incorrect answer
-    for (
-      player_iterator  = timeSortedInCorrectPlayers.begin();
-      player_iterator != timeSortedInCorrectPlayers.end();
-      player_iterator++
-      )
-    {
-      player* currentPlayer = player_iterator->second;
-      // this number may get configurable
-      currentPlayer->plusPoints = player_points;
-    }
-  }
+    { // points for incorrect
+      score_iterator = myQuizConfig.points_for_incorrect.begin();
+      for (
+        player_iterator  = timeSortedInCorrectPlayers.begin();
+        player_iterator != timeSortedInCorrectPlayers.end();
+        player_iterator++,score_iterator++
+        )
+      {
+        if (myQuizConfig.points_for_incorrect.end()==score_iterator){
+          score_iterator--;
+        }
+        player* currentPlayer = player_iterator->second;
+        // this number may get configurable
+        currentPlayer->plusPoints = (*score_iterator);
+      }
+    } // points for incorrect
+    { // points for noanswer
+      std::set<player*>::const_iterator player_iterator;
+      for(
+        player_iterator  = nonAnswerPlayers.begin();
+        player_iterator != nonAnswerPlayers.end();
+        player_iterator++
+        )
+      {
+        (*player_iterator)->plusPoints = myQuizConfig.points_for_nothing;
+      }
+    } // no answer
+  } // award the points
 }
 void quiz_player::players::awardPoints(){
   std::map<quiz_sources::playerSource,player*>::const_iterator player_iterator;

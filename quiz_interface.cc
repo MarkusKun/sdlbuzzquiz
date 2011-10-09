@@ -47,12 +47,12 @@ void quiz_interface::paintPlayer(
     answerRect2.x-=answerRect2.h;
   }
   
-  // config may allow showing of answer, before
-  if (myQuizConfig.preshow_answers){
-    showAnswer = true;
-  }
   { // given Answer
-    if (showAnswer){ // if answers are to be shown
+    if (
+      (showAnswer) ||// if answers are to be shown
+      (myQuizConfig.preshow_answers) // config may allow showing of answer, before
+      )
+    {
       if (givenPlayer.givenAnswer != 0){ // if player answered
         paintRectangleOnSurface(
           target,

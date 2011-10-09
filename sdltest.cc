@@ -179,7 +179,9 @@ int main(void){
   bool terminateGame=false;
   bool callAdmin = true;
   
-  quiz_question::questions myQuestions = quiz_question::readFile("./xml/questions.xml");
+  //quiz_question::questions myQuestions = quiz_question::readFile("./xml/questions.xml");
+  
+  quiz_question::questions myQuestions = myQuizConfig.quizQuestions;
   
   quiz_question::questions::const_iterator question_iterator;
   
@@ -241,6 +243,9 @@ int main(void){
       quiz_question::questions::iterator del_iterator = myQuestions.begin();
       del_iterator += currentQuestionIndex;
       myQuestions.erase(del_iterator);
+    }
+    if (myQuizConfig.reuse_questions){ // insert question, again
+      myQuestions.push_back(currentQuestion);
     }
     
   } // while not terminate game

@@ -13,8 +13,6 @@ namespace quiz_question{
   
   typedef std::vector<question> questions;
   
-  questions readFile(std::string questionFile);
-  
   
 }; // namespace
 

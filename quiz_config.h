@@ -1,10 +1,13 @@
 #ifndef _QUIZ_CONFIG_H
 #define _QUIZ_CONFIG_H
 
-#include <map>
+#include <vector>
 #include <string>
 
+
 #include "rapidxml.hpp"
+
+#include "quiz_question.h"
 
 class quiz_config{
   public: 
@@ -12,18 +15,26 @@ class quiz_config{
     bool randomize_answers;
     bool preshow_answers;
     bool allow_redecision;
-    std::map<unsigned int, int> points_for_correct;
-    std::map<unsigned int, int> points_for_incorrect;
-    int points_for_correct_after;
-    int points_for_incorrect_after;
+    bool reuse_questions;
+    std::vector<int> points_for_correct;
+    std::vector<int> points_for_incorrect;
+    int points_for_nothing;
+    quiz_question::questions quizQuestions; // vector of question
+    unsigned int questionTime;
+    unsigned int answerTime;
+    bool earlyFinish;
     
     quiz_config();
     
     void read(std::string xmlfilename);
     void extractConfig(rapidxml::xml_node<>* configNode);
+    void extractQuestions(rapidxml::xml_node<>* configNode);
+    void extractScoring(rapidxml::xml_node<>* scoringNode);
+    void extractTiming(rapidxml::xml_node<>* configNode);
     
 }; // class quiz_config
 bool convertBoolean(std::string textValue);
+int convertInteger(std::string textValue);
   
 #endif // _QUIZ_CONFIG_H
 

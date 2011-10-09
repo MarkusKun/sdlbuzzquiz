@@ -14,8 +14,8 @@ namespace quiz_player{
     std::string playerName;
     unsigned int responseTime; // milliseconds
     unsigned int givenAnswer; // 0: no answer given yet
-    unsigned int sumPoints; // sum of points
-    unsigned int plusPoints; // new points for this question
+    int sumPoints; // sum of points
+    int plusPoints; // new points for this question
     player(std::string newPlayerName = "NoName");
   };
   
