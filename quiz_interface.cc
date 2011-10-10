@@ -121,18 +121,18 @@ quiz_interface::screenTiling quiz_interface::getScreenTiling(
           myScreenTiling.questionArea.x = 0;
           myScreenTiling.questionArea.y = currentYPos;
           myScreenTiling.questionArea.w = screenWidth;
-          myScreenTiling.questionArea.h = screenHeight / 4;
+          myScreenTiling.questionArea.h = screenHeight / 10;
           currentYPos+=myScreenTiling.questionArea.h;
         }
         SDL_Rect answerArea;
-        const unsigned int colorAreaWidth = screenHeight / 2 / 4;
+        const unsigned int colorAreaWidth = screenHeight / 4 / 4;
         const unsigned int spaceBetweenColorAndAnswer=10; 
         const unsigned int timerHeight = 30;
         { // generic area for answers: half of the screen,  below the questions
           answerArea.y = currentYPos;
           answerArea.x = colorAreaWidth + spaceBetweenColorAndAnswer;
           answerArea.w = screenWidth / 2;
-          answerArea.h = screenHeight / 2;
+          answerArea.h = screenHeight / 3;
           currentYPos += answerArea.h;
         }
         { // small answer areas, divide generic answer area
@@ -562,6 +562,11 @@ bool quiz_interface::callInterface(
   unsigned int ticks_at_start = SDL_GetTicks();
   bool adminRequested = false;
   SDL_Event myEvent;
+  
+  // there may be some events in the queue - delete them!
+  while (0!=SDL_PollEvent(&myEvent)){
+    // simply polling it deletes it from the queue
+  }
   SDL_TimerID my_timer_id = SDL_AddTimer(1000, timeoutCallBack, NULL);
   
   while(true){
