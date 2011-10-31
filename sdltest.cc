@@ -178,8 +178,22 @@ int main(void){
     
   while (!myQuestions.empty()){
     unsigned int currentQuestionIndex=0;
+    unsigned int maximumPossibleQuestion=myQuestions.size();
+    { // if questions are reused, at least block them for some time
+      /*
+       * As questions are appended to vector are using them,
+       * blocking them simply means limiting the RNG to the numbers
+       * below them - so determine the number of questions not to be used
+       * and subtract from the number of total questions.
+       */
+      if (myQuizConfig.reuse_questions){
+        unsigned int blockedQuestions = myQuestions.size() / 4;
+        maximumPossibleQuestion -= blockedQuestions;
+      }
+    }
+    
     if (myQuizConfig.randomize_questions){
-      currentQuestionIndex = (rand()*1.0)/RAND_MAX * myQuestions.size();
+      currentQuestionIndex = (rand()*1.0)/RAND_MAX * maximumPossibleQuestion;
     }
     if (callAdmin){ // admin interface?
       if (adminInterface::callInterface(

@@ -1,6 +1,6 @@
 #include <sstream>
 #include <iostream>
-
+#include <iomanip> // setw and setfill
 #include "drawhelper.h"
 
 #include "quiz_interface.h"
@@ -92,8 +92,8 @@ void quiz_interface::paintPlayer(
         // full seconds
         convertStream << std::dec << givenPlayer.responseTime/1000;
         convertStream << ".";
-        // millis
-        convertStream << std::dec << givenPlayer.responseTime%1000;
+        // millis - don't forget to print leading zeros!
+        convertStream << std::dec << std::setw(3) << std::setfill('0') << givenPlayer.responseTime%1000;
         time = convertStream.str();
       }
       writeOnSurfaceCentered(
