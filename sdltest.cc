@@ -142,7 +142,7 @@ int main(void){
   std::string newPlayerName = "noPlayer";
   
   { // add some random players
-    const unsigned int NUMBEROFNULLPLAYERS = 20;
+    const unsigned int NUMBEROFNULLPLAYERS = 2;
     unsigned int currentPlayerIndex;
     for (
       currentPlayerIndex = 0;

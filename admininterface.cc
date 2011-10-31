@@ -6,7 +6,7 @@
 #include "quiz_player.h"
 #include "quiz_config.h"
 
-extern quiz_config::quiz_config myQuizConfig;
+extern quiz_config myQuizConfig;
 
 void adminInterface::showInterface(
   SDL_Surface* target,

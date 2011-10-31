@@ -7,7 +7,7 @@
 #include "quiz_config.h"
 #include "quiz_player.h"
 
-extern quiz_config::quiz_config myQuizConfig;
+extern quiz_config myQuizConfig;
 
 void quiz_player::players::clearAnswers(){
   std::map<quiz_sources::playerSource,player*>::iterator player_iterator;
@@ -227,7 +227,14 @@ void quiz_player::players::awardPoints(){
     )
   {
     player* currentPlayer = player_iterator->second;
-    currentPlayer->sumPoints += currentPlayer->plusPoints;
+    int currentPlayerPoints = currentPlayer->sumPoints;
+    { // calculate new point number
+      // points may decay
+      currentPlayerPoints -= (currentPlayerPoints * myQuizConfig.points_decay) / 100;
+      // add new points
+      currentPlayerPoints += currentPlayer->plusPoints;
+    }
+    currentPlayer->sumPoints = currentPlayerPoints;
     currentPlayer->plusPoints = 0;
   }
 }

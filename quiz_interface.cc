@@ -9,7 +9,7 @@
 
 #include <math.h> // for sqrt
 
-extern quiz_config::quiz_config myQuizConfig;
+extern quiz_config myQuizConfig;
 
 void quiz_interface::paintPlayer(
   SDL_Surface* target,

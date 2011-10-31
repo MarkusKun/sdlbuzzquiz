@@ -19,7 +19,11 @@ class quiz_config{
     std::vector<int> points_for_correct;
     std::vector<int> points_for_incorrect;
     int points_for_nothing;
+    unsigned int points_decay;
+    
+    
     quiz_question::questions quizQuestions; // vector of question
+    
     unsigned int questionTime;
     unsigned int answerTime;
     bool earlyFinish;

@@ -20,6 +20,8 @@ quiz_config::quiz_config(){
   points_for_correct.push_back(0);
   points_for_incorrect.push_back(0);
   points_for_nothing = 0;
+  points_decay = 100;
+  
   questionTime = 15;
   answerTime = 6;
   earlyFinish         = true;
@@ -67,6 +69,9 @@ void quiz_config::extractScoring(rapidxml::xml_node<>* scoringNode){
     }
     else if ("nothing" == configName){
       points_for_nothing = convertInteger(configValue);
+    }
+    else if ("decay" == configName){
+      points_decay = convertInteger(configValue);
     }
     else{
       std::cerr << "Unknown scoring option: " << configName << std::endl;
