@@ -20,7 +20,7 @@ quiz_config::quiz_config(){
   points_for_correct.push_back(0);
   points_for_incorrect.push_back(0);
   points_for_nothing = 0;
-  points_decay = 100;
+  points_decay = 0;
   
   questionTime = 15;
   answerTime = 6;
