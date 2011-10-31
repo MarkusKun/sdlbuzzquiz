@@ -170,6 +170,8 @@ int main(void){
   
   quiz_question::questions myQuestions = myQuizConfig.quizQuestions;
   
+  std::cout << "Questions loaded: " << myQuestions.size() << std::endl;
+  
   quiz_question::questions::const_iterator question_iterator;
   
   srand((unsigned)time(0)); // seed the RNG
