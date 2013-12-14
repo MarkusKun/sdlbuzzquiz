@@ -76,16 +76,15 @@ Still, it can be quite some fun, so you might want to
 check it out:
 http://www.familie-siegert.de/musik.htm
 
-It seems like quizxpress also focusses on quizzes and supports
-the buzzers. I haven't yet tried it. It's commercial software.
-http://www.quizxpress.com/
-
-
-
 We had a huge laugh as we put some Zelda-Soundtrack-CDs into
 a playlist and watched in horror how some huge Zelda-fan
 identified most of them in the first few seconds - He
 seemed to identify the songs by the noise before the music started.
+
+It seems like quizxpress also focusses on quizzes and supports
+the buzzers. I haven't yet tried it. It's commercial software.
+http://www.quizxpress.com/
+
 
 Usage of this game:
 You _can_ play this game using the keyboard but this was mainly
@@ -181,12 +180,16 @@ Legal stuff:
 Play it for free, change the code for free, but think
 about publishing it with code, again (GNU GPLv3).
 
-The used font is "Liberation". Its license is GNU?
+The quiz uses RapidXML to read XML. 
+http://rapidxml.sourceforge.net/
+At the time of writing, RapidXML is available under Boost-license and MIT-license
+rapidxml.hpp is not included in this repository. It needs to be downloaded.  
 
-XML is read with RapidXML. Its license is ???
-
-
-
+The quiz uses Liberation Sans Regular as default font.
+https://fedorahosted.org/liberation-fonts/
+When it was first used in the quit, the Liberation font family was available under GPLv2.
+At the time of writing, the Liberation font family is available under SIL Open Font License.
+The font file itself is not included in this repository. It needs to be downloaded.
 
 
 

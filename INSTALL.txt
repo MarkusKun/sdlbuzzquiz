@@ -1,0 +1,33 @@
+Compiling the sdl-buzz-quiz:
+
+Requirements:
+* As the sdl-buzz-quiz uses SDL, sdl needs to be installed on your system.
+* sdl-config should be available as the makefile uses it to query paths
+* The quiz uses TTF-fonts. SDL_TTF is required.
+
+* The quiz uses RapidXML to read XML. As the source file is
+  not included, you have to download it, yourself, from:
+  http://rapidxml.sourceforge.net/
+  Place "rapidxml.hpp" in the root project directory
+
+* I like the font family liberation, so this is used
+  in the quiz. It is not included, so you have to download it,
+  yourself, from:
+  https://fedorahosted.org/liberation-fonts/
+  place "LiberationSans-Regular.ttf" in the root project
+  directoy.
+  If you'd like to use other fonts, you have to replace
+  the filename in the source file (may become 
+  config option in the future)
+
+* and - obviously, you should have a working C++ compiler and linker
+* Although this is no requirement, using the Makefile really
+  should be the simplest way to build the game. Obviously,
+  you need make to do so.
+  
+  
+Once the requirements are met, a simple "make" in the
+root project directory should suffice to build the binary.
+
+  
+

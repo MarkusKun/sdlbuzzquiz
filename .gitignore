@@ -1,0 +1,5 @@
+*.ttf
+*.o
+*.bin
+rapidxml.hpp
+
