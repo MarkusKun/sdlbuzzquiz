@@ -14,7 +14,7 @@ BINFILE  := sdltest.bin
 OBJFILES := sdltest.o buzzer.o drawhelper.o \
 						quiz_interface.o admininterface.o \
 						quiz_player.o quiz_sources.o \
-						quiz_question.o
+						quiz_question.o quiz_config.o
 
 
 $(BINFILE) : $(OBJFILES)

@@ -5,8 +5,11 @@
 
 #include "quiz_interface.h"
 #include "quiz_player.h"
+#include "quiz_config.h"
 
 #include <math.h> // for sqrt
+
+extern quiz_config::quiz_config myQuizConfig;
 
 void quiz_interface::paintPlayer(
   SDL_Surface* target,
@@ -44,6 +47,10 @@ void quiz_interface::paintPlayer(
     answerRect2.x-=answerRect2.h;
   }
   
+  // config may allow showing of answer, before
+  if (myQuizConfig.preshow_answers){
+    showAnswer = true;
+  }
   { // given Answer
     if (showAnswer){ // if answers are to be shown
       if (givenPlayer.givenAnswer != 0){ // if player answered
@@ -464,9 +471,7 @@ bool quiz_interface::callInterface(
     exit (1);
   }
   screenTiling myScreenTiling=getScreenTiling(SCREEN_LAYOUT_LIST,screenWidth,screenHeight);
-  #define QUESTION_SHUFFLE_ANSWERS
-  #ifdef QUESTION_SHUFFLE_ANSWERS
-  { // shuffle answers
+  if (myQuizConfig.randomize_answers){// shuffle answers
     const unsigned int SHUFFLETIMES = 20; 
     unsigned int shuffleCount;
     for (
@@ -492,7 +497,6 @@ bool quiz_interface::callInterface(
       }
     } // switch places for some times
   }
-  #endif // QUESTION_SHUFFLE_ANSWERS
   
   { // write the question and available answers
     writeQuestionAndAnswers(
@@ -711,8 +715,11 @@ void quiz_interface::storePlayerAnswer(
     std::cerr << "quiz_interface::storePlayerAnswer: Strange - player could not be found" << std::endl;
     return;
   }
-  if (activePlayer->givenAnswer==0){ // has not yet answered
-    // we could allow re-answering in another mode
+  if (
+    (activePlayer->givenAnswer==0)|| // has not yet answered
+    (myQuizConfig.allow_redecision) // redeciding is allowed
+    )
+  {
     activePlayer->responseTime = reaction_time;
     activePlayer->givenAnswer = givenSourceAnswer.answerIndex;
   }

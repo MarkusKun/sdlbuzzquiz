@@ -11,7 +11,11 @@
 #include "drawhelper.h"
 #include "quiz_interface.h"
 #include "quiz_question.h"
+#include "quiz_config.h"
 #include "admininterface.h"
+
+
+quiz_config myQuizConfig;
 
 void printJoystickInformation(std::ostream& outStream){
   using std::endl;
@@ -64,11 +68,8 @@ void printTTFVersion(std::ostream& outStream){
   }
 }  
 
-unsigned int playercounter=0;
-
-
-using namespace std;
 int main(void){
+  using std::cout; using std::endl;
   
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_TIMER )== -1){
     cout << "Cant Init SDL: " << SDL_GetError() << endl;
@@ -82,6 +83,11 @@ int main(void){
       printf("TTF_Init: %s\n", TTF_GetError());
       exit(2);
   }
+  
+  std::string configFilename = "./xml/defaultconfig.xml";
+  
+  myQuizConfig.read(configFilename);
+  
 
   const unsigned int screenWidth  = 800;
   const unsigned int screenHeight = 600;
@@ -181,14 +187,9 @@ int main(void){
     
   while (!myQuestions.empty()){
     unsigned int currentQuestionIndex=0;
-    //#define QUESTIONS_RANDOM_ORDER
-    #ifdef QUESTIONS_RANDOM_ORDER
-    {
+    if (myQuizConfig.randomize_questions){
       currentQuestionIndex = (rand()*1.0)/RAND_MAX * myQuestions.size();
     }
-    #endif // QUESTIONS_RANDOM_ORDER
-    
-    // todo: choose question randomly
     if (callAdmin){ // admin interface?
       if (adminInterface::callInterface(
         screenWidth,
