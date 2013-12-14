@@ -29,5 +29,9 @@ Requirements:
 Once the requirements are met, a simple "make" in the
 root project directory should suffice to build the binary.
 
-  
+There are only a few questions included in this repository - just enough to test the game and
+have an idea of the xml file format. You should add some more questions depending
+on the desired scope of the game. 
+
+
 
