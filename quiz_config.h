@@ -4,6 +4,8 @@
 #include <map>
 #include <string>
 
+#include "rapidxml.hpp"
+
 class quiz_config{
   public: 
     bool randomize_questions;
@@ -18,8 +20,10 @@ class quiz_config{
     quiz_config();
     
     void read(std::string xmlfilename);
+    void extractConfig(rapidxml::xml_node<>* configNode);
     
 }; // class quiz_config
+bool convertBoolean(std::string textValue);
   
 #endif // _QUIZ_CONFIG_H
 
