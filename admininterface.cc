@@ -4,6 +4,9 @@
 #include "admininterface.h"
 
 #include "quiz_player.h"
+#include "quiz_config.h"
+
+extern quiz_config::quiz_config myQuizConfig;
 
 void adminInterface::showInterface(
   SDL_Surface* target,
@@ -248,8 +251,6 @@ bool adminInterface::mouseInRect(
 
 
 bool adminInterface::callInterface(
-  unsigned int screenWidth,
-  unsigned int screenHeight,
   TTF_Font* font,
   SDL_Color color_background,
   SDL_Color color_text,
@@ -258,7 +259,15 @@ bool adminInterface::callInterface(
   )
 {
   SDL_Surface *adminScreen;
-  adminScreen= SDL_SetVideoMode(screenWidth,screenHeight,16,SDL_HWSURFACE |SDL_FULLSCREEN); // |SDL_FULLSCREEN
+  unsigned int screenWidth = myQuizConfig.screenwidth;
+  unsigned int screenHeight = myQuizConfig.screenheight;
+  unsigned int bitsPerPixel=16;
+  uint32_t screenFlags = SDL_HWSURFACE;
+  if (myQuizConfig.fullscreen){
+    screenFlags |= SDL_FULLSCREEN;
+  }
+  
+  adminScreen= SDL_SetVideoMode(screenWidth,screenHeight,bitsPerPixel,screenFlags); 
   if (NULL == adminScreen){
     std::cerr << "Cant set video Mode: " << SDL_GetError() << std::endl;
     exit (1);

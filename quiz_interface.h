@@ -93,8 +93,6 @@ namespace quiz_interface{
   
   //! do a single question, return false if admin is to be called
   bool callInterface(
-    unsigned int screenWidth,
-    unsigned int screenHeight,
     TTF_Font* font,
     SDL_Color color_background,
     SDL_Color color_text,

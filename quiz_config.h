@@ -24,6 +24,12 @@ class quiz_config{
     unsigned int answerTime;
     bool earlyFinish;
     
+    
+    unsigned int screenwidth;
+    unsigned int screenheight;
+    bool fullscreen;
+    unsigned int fontsize;
+    
     quiz_config();
     
     void read(std::string xmlfilename);
@@ -31,6 +37,7 @@ class quiz_config{
     void extractQuestions(rapidxml::xml_node<>* configNode);
     void extractScoring(rapidxml::xml_node<>* scoringNode);
     void extractTiming(rapidxml::xml_node<>* configNode);
+    void extractGraphics(rapidxml::xml_node<>* configNode);
     
 }; // class quiz_config
 bool convertBoolean(std::string textValue);

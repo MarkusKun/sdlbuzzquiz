@@ -164,10 +164,15 @@ in which the "correct"-Tags are given in the config is the order in which
 players get points - so the quickest player gets the points that are
 first in list.
 Note: After this "queue" has been used up, additional correct players
-get the number of points that are given in the "last" tag.
+get the number of points that are given in the "last" tag. So if you want
+the slower players to not get any points at all, add one entry with 0 points.
 Same for "incorrect" (for players giving incorrect answers)
-
-
+"nothing" states the number of points a player gets for not answering at all.
+With this, you may reward not giving a wrong answer (if the wrong answer gives
+less points than the "nothing") but you may also use this as a penalty
+(if you're not right, at least be certain).
+Of course, there is no "first" player that hasn't answered. All players that
+didn't answer, did so at the same time.
 
 Adding questions:
 The questions are contained in xml-files. More information follows.

@@ -87,25 +87,11 @@ int main(void){
   std::string configFilename = "./xml/defaultconfig.xml";
   
   myQuizConfig.read(configFilename);
-  
-
-  const unsigned int screenWidth  = 800;
-  const unsigned int screenHeight = 600;
-  
-  /*
-  SDL_Rect fullScreen;
-  {
-    fullScreen.w=screenWidth;
-    fullScreen.h=screenHeight;
-    fullScreen.x=0;
-    fullScreen.y=0;
-  }
-  */
 
   TTF_Font *font;
   {
     // load font.ttf at size 16 into font
-    font=TTF_OpenFont("LiberationSans-Regular.ttf", 16);
+    font=TTF_OpenFont("LiberationSans-Regular.ttf", myQuizConfig.fontsize);
     if(!font) {
       printf("TTF_OpenFont: %s\n", TTF_GetError());
       // handle error
@@ -194,8 +180,6 @@ int main(void){
     }
     if (callAdmin){ // admin interface?
       if (adminInterface::callInterface(
-        screenWidth,
-        screenHeight,
         font,
         color_black,
         color_white,
@@ -224,8 +208,6 @@ int main(void){
     
     { // do a question 
       if(quiz_interface::callInterface(
-        screenWidth,
-        screenHeight,
         font,
         color_black,
         color_white,

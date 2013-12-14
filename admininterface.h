@@ -22,8 +22,6 @@ namespace adminInterface{
    * return false  if program is to terminate
    */
   bool callInterface(
-    unsigned int screenWidth,
-    unsigned int screenHeight,
     TTF_Font* font,
     SDL_Color color_background,
     SDL_Color color_text,

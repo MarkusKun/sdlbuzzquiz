@@ -55,8 +55,12 @@ namespace quiz_player{
       void removePlayer(player* toDelPlayer);
       //! set given answers and newpoints to 0 (call before a question)
       void clearAnswers();
+      //! finds out whether each player has given an answer
+      bool hasEveryoneAnswered();
       //! number of players
       unsigned int size()const;
+      //! are there any players?
+      bool empty()const;
       //! calculate points for all players
       void calculatePoints(const unsigned int correctAnswerIndex);
       //! award points to all players who deserve them

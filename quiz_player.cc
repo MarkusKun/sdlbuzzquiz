@@ -22,6 +22,26 @@ void quiz_player::players::clearAnswers(){
   }
 }
 
+bool quiz_player::players::empty()const{
+  return source2playerMap.empty();
+}  
+
+bool quiz_player::players::hasEveryoneAnswered(){
+  std::map<quiz_sources::playerSource,player*>::iterator player_iterator;
+  for (
+    player_iterator  = source2playerMap.begin();
+    player_iterator != source2playerMap.end();
+    player_iterator++
+    )
+  {
+    if (0==player_iterator->second->givenAnswer){ // has not yet answered
+      return false;
+    }
+  }
+  // no player has not yet answered:
+  return true;
+}
+
 unsigned int quiz_player::players::size()const{
   return source2playerMap.size();
 }

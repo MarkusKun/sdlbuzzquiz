@@ -7,7 +7,7 @@
 
 #include "quiz_config.h"
 
-#define DEBUG_CONFIGREADER
+//#define DEBUG_CONFIGREADER
 
 
 quiz_config::quiz_config(){
@@ -108,6 +108,37 @@ void quiz_config::extractTiming(rapidxml::xml_node<>* configNode){
   }
 } // function extractTiming
 
+void quiz_config::extractGraphics(rapidxml::xml_node<>* configNode){
+  rapidxml::xml_node<>* configElement;
+  for (
+    configElement  = configNode->first_node();
+    configElement != NULL;
+    configElement  = configElement->next_sibling()
+    )
+  {
+    std::string configName = configElement->name();
+    std::string configValue = configElement->value();
+    #ifdef DEBUG_CONFIGREADER
+    std::cout << configName << " -> " << configValue << std::endl;
+    #endif
+    if ("screenwidth" == configName){
+      screenwidth = convertInteger(configValue);
+    }
+    else if("screenheight" == configName){
+      screenheight = convertInteger(configValue);
+    }
+    else if("fullscreen" == configName){
+      fullscreen = convertBoolean(configValue);
+    }
+    else if("fontsize" == configName){
+      fontsize = convertInteger(configValue);
+    }
+    else{
+      std::cerr << "Unknown Configuration Option: " << configName << std::endl;
+    }
+  }
+} // function extractTiming
+
 void quiz_config::extractConfig(rapidxml::xml_node<>* configNode){
   rapidxml::xml_node<>* configElement;
   for (
@@ -144,6 +175,9 @@ void quiz_config::extractConfig(rapidxml::xml_node<>* configNode){
     }
     else if ("timing" == configName){
       extractTiming(configElement);
+    }
+    else if ("graphics" == configName){
+      extractGraphics(configElement);
     }
     else{
       std::cerr << "Unknown Configuration Option: " << configName << std::endl;

@@ -454,8 +454,6 @@ Uint32 quiz_interface::timeoutCallBack(Uint32 interval, void *param){
 
 
 bool quiz_interface::callInterface(
-  unsigned int screenWidth,
-  unsigned int screenHeight,
   TTF_Font* font,
   SDL_Color color_background,
   SDL_Color color_text,
@@ -465,7 +463,15 @@ bool quiz_interface::callInterface(
   )
 {
   SDL_Surface *questionScreen;
-  questionScreen= SDL_SetVideoMode(screenWidth,screenHeight,16,SDL_HWSURFACE  |SDL_FULLSCREEN); // |SDL_FULLSCREEN
+  unsigned int screenWidth = myQuizConfig.screenwidth;
+  unsigned int screenHeight = myQuizConfig.screenheight;
+  unsigned int bitsPerPixel=16;
+  uint32_t screenFlags = SDL_HWSURFACE;
+  if (myQuizConfig.fullscreen){
+    screenFlags |= SDL_FULLSCREEN;
+  }
+  
+  questionScreen= SDL_SetVideoMode(screenWidth,screenHeight,bitsPerPixel,screenFlags); 
   if (NULL == questionScreen){
     std::cerr << "Cant set video Mode: " << SDL_GetError() << std::endl;
     exit (1);
@@ -510,7 +516,8 @@ bool quiz_interface::callInterface(
       currentQuestion.answerStrings
       );
   }
-  const unsigned int maximumTime = 15;
+  const unsigned int questionTime = myQuizConfig.questionTime;
+  const unsigned int answerTime = myQuizConfig.answerTime;
   
   // these definitions probably should get their own argument
   SDL_Color color_red   = {0xff,0x00,0x00};
@@ -518,14 +525,14 @@ bool quiz_interface::callInterface(
 
   { // print first time bar (full)
     std::stringstream output;
-    output << "noch " << maximumTime << " Sekunden";
+    output << "noch " << questionTime << " Sekunden";
     quiz_interface::paintRemainingTime(
       questionScreen,
       myScreenTiling.timerArea,
       font,
       output.str(),
-      maximumTime, // nothing gone
-      maximumTime, 
+      questionTime, // nothing gone
+      questionTime, 
       color_text,
       color_background,
       color_red,
@@ -551,7 +558,7 @@ bool quiz_interface::callInterface(
   SDL_Flip(questionScreen);
 
   // and start counting
-  unsigned int remain_seconds = maximumTime;
+  unsigned int remain_seconds = questionTime;
   unsigned int ticks_at_start = SDL_GetTicks();
   bool adminRequested = false;
   SDL_Event myEvent;
@@ -604,6 +611,15 @@ bool quiz_interface::callInterface(
     }
     if (SDL_USEREVENT == myEvent.type){ // userevent - a second passed
       remain_seconds--;
+
+      if (myQuizConfig.earlyFinish){ // question may end early
+        if (!playerList.empty()){ // no sense if there are no players
+          if (playerList.hasEveryoneAnswered()){ // if everyone has answered
+            remain_seconds=0;
+          }
+        }
+      } // earlyfinish actived
+      
       std::stringstream output;
       output << "noch " << remain_seconds << " Sekunden";
       if (0==remain_seconds){
@@ -616,7 +632,7 @@ bool quiz_interface::callInterface(
         myScreenTiling.timerArea,
         font,
         output.str(),
-        maximumTime, 
+        questionTime, 
         remain_seconds,
         color_text,
         color_background,
@@ -690,7 +706,8 @@ bool quiz_interface::callInterface(
       );
   }
   SDL_Flip(questionScreen);
-  SDL_Delay(6000); // so players have time to wonder
+  
+  SDL_Delay(answerTime*1000); // so players have time to wonder
   
   { // afterwards, really add the points
     playerList.awardPoints();
