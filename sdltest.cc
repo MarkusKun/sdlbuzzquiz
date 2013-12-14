@@ -10,81 +10,8 @@
 #include "buzzer.h"
 #include "drawhelper.h"
 #include "quiz_interface.h"
-
-
-
-
-
-
-void buzz_identify(int givenButton){
-  using std::cout; using std::endl;
-  unsigned int buzzer_number =  givenButton/5;
-  unsigned int buzzer_button =  givenButton%5;
-  
-  cout << givenButton << " -> Buzzer: " << buzzer_number << " ";
-  switch (buzzer_button){
-    case BUZZ_RED:
-      {
-        cout << "Big Red Button on top";
-        break;
-      }
-    case BUZZ_YELLOW:
-      {
-        cout << "Yellow";
-        break;
-      }
-    case BUZZ_GREEN:
-      {
-        cout << "Green";
-        break;
-      }
-    case BUZZ_ORANGE:
-      {
-        cout << "Orange";
-        break;
-      }
-    case BUZZ_BLUE:
-      {
-        cout << "Blue";
-        break;
-      }
-    default:
-      {
-        cout << "SOMETHING WRONG!!!";
-        break;
-      }
-  } // switch
-  cout << endl;
-  
-}
-
-Uint32 timeoutCallBack(Uint32 interval, void *param){
-  static unsigned int passedSeconds=0;
-  passedSeconds++;
-  //std::cout << "A Second has passed!" << std::endl;
-
-  SDL_Event event;
-  SDL_UserEvent userevent;
-  
-  /* In this example, our callback pushes an SDL_USEREVENT event
-  into the queue, and causes ourself to be called again at the
-  same interval: */
-  
-  userevent.type = SDL_USEREVENT;
-  userevent.code = 0;
-  userevent.data1 = NULL;
-  userevent.data2 = NULL;
-  
-  event.type = SDL_USEREVENT;
-  event.user = userevent;
-  
-  SDL_PushEvent(&event);
- 
- 
- 
-  return(interval);
-
-}
+#include "quiz_question.h"
+#include "admininterface.h"
 
 void printJoystickInformation(std::ostream& outStream){
   using std::endl;
@@ -139,101 +66,6 @@ void printTTFVersion(std::ostream& outStream){
 
 unsigned int playercounter=0;
 
-quiz_player::player* keyboardPlayers[4]; // increase, later
-/*
- * this is no real solution.. I guess, another data structure
- * mapping all input abilities to players (and possibly back)
- * will be needed, later
- */
-
-quiz_player::player* identify_player(
-  SDLKey pressedKey, 
-  quiz_player::players_t& players
-  )
-{
-  // SDLKey should be SDL_Keycode according to doc
-  static std::map<SDLKey,unsigned int> keyPlayerMapping;
-  if (keyPlayerMapping.empty()){
-    keyPlayerMapping[SDLK_5]=0;
-    keyPlayerMapping[SDLK_t]=0;
-    keyPlayerMapping[SDLK_g]=0;
-    keyPlayerMapping[SDLK_b]=0;
-    keyPlayerMapping[SDLK_2]=1;
-    keyPlayerMapping[SDLK_w]=1;
-    keyPlayerMapping[SDLK_s]=1;
-    keyPlayerMapping[SDLK_x]=1;
-    keyPlayerMapping[SDLK_3]=2;
-    keyPlayerMapping[SDLK_e]=2;
-    keyPlayerMapping[SDLK_d]=2;
-    keyPlayerMapping[SDLK_c]=2;
-    keyPlayerMapping[SDLK_4]=3;
-    keyPlayerMapping[SDLK_r]=3;
-    keyPlayerMapping[SDLK_f]=3;
-    keyPlayerMapping[SDLK_v]=3;
-  }
-  
-  std::map<SDLKey,unsigned int>::const_iterator map_searcher;
-  map_searcher=keyPlayerMapping.find(pressedKey);
-  if (keyPlayerMapping.end()==map_searcher){
-    // key is no player
-    return NULL;
-  }
-  unsigned int keyPlayerIndex = map_searcher->second;
-  
-  if (NULL!=keyboardPlayers[keyPlayerIndex]){ // player exists
-    return keyboardPlayers[keyPlayerIndex];
-  }else{ // player must be created
-    quiz_player::player* newPlayer = new quiz_player::player;
-    std::string newPlayerNumber;
-    {
-      std::stringstream convertStream;
-      convertStream << std::dec << playercounter;
-      convertStream >> newPlayerNumber;
-      playercounter++;
-    }
-    newPlayer->playerName = "UnplayedNamer"+newPlayerNumber;
-    newPlayer->sumPoints = 0;
-    newPlayer->responseTime=0;
-    newPlayer->givenAnswer = 0;
-    keyboardPlayers[keyPlayerIndex]=newPlayer;
-    players.push_back(newPlayer);
-    return newPlayer;
-  }
-}
-unsigned int identify_answer(
-  SDLKey pressedKey
-  )
-{
-  static std::map<SDLKey,unsigned int> keyAnswerMapping;
-  if (keyAnswerMapping.empty()){
-    keyAnswerMapping[SDLK_5]=1;
-    keyAnswerMapping[SDLK_t]=2;
-    keyAnswerMapping[SDLK_g]=3;
-    keyAnswerMapping[SDLK_b]=4;
-    keyAnswerMapping[SDLK_2]=1;
-    keyAnswerMapping[SDLK_w]=2;
-    keyAnswerMapping[SDLK_s]=3;
-    keyAnswerMapping[SDLK_x]=4;
-    keyAnswerMapping[SDLK_3]=1;
-    keyAnswerMapping[SDLK_e]=2;
-    keyAnswerMapping[SDLK_d]=3;
-    keyAnswerMapping[SDLK_c]=4;
-    keyAnswerMapping[SDLK_4]=1;
-    keyAnswerMapping[SDLK_r]=2;
-    keyAnswerMapping[SDLK_f]=3;
-    keyAnswerMapping[SDLK_v]=4;
-  }
-  std::map<SDLKey,unsigned int>::const_iterator map_searcher;
-  map_searcher=keyAnswerMapping.find(pressedKey);
-  if (keyAnswerMapping.end()==map_searcher){
-    // key is no answer
-    return 0;
-  }else{
-    return map_searcher->second;
-  }
-  
-}
-
 
 using namespace std;
 int main(void){
@@ -253,6 +85,8 @@ int main(void){
 
   const unsigned int screenWidth  = 800;
   const unsigned int screenHeight = 600;
+  
+  /*
   SDL_Rect fullScreen;
   {
     fullScreen.w=screenWidth;
@@ -260,14 +94,7 @@ int main(void){
     fullScreen.x=0;
     fullScreen.y=0;
   }
-
-
-  SDL_Surface *screen;
-  screen= SDL_SetVideoMode(screenWidth,screenHeight,16,SDL_HWSURFACE ); // |SDL_FULLSCREEN
-  if (NULL == screen){
-    cout << "Cant set video Mode: " << SDL_GetError() << endl;
-    exit (1);
-  }
+  */
 
   TTF_Font *font;
   {
@@ -284,6 +111,12 @@ int main(void){
   SDL_Color color_buzzOrange  = {0xff,0x70,0x00};
   SDL_Color color_buzzGreen   = {0x00,0xff,0x00};
   SDL_Color color_buzzYellow  = {0xff,0xff,0x00};
+  SDL_Color answerColors[4]={
+    color_buzzBlue,
+    color_buzzOrange,
+    color_buzzGreen,
+    color_buzzYellow
+    };
   
   
   SDL_Color color_black = {0x00,0x00,0x00};
@@ -292,6 +125,7 @@ int main(void){
   SDL_Color color_green = {0x00,0xff,0x00};
   
   
+  #ifdef TEST_SDL_SPRITES
   SDL_Surface* eeveepic = NULL;
   { // try to load pic  
     SDL_Surface *eeveetemppic;
@@ -304,225 +138,121 @@ int main(void){
 
     SDL_SetColorKey(eeveepic, SDL_SRCCOLORKEY | SDL_RLEACCEL, SDL_MapRGB(eeveepic->format, 0x60, 0x98, 0x80));
   }
+  #endif // TEST_SDL_SPRITES
   
   printJoystickInformation(std::cout);
 
-  quiz_player::players_t gamePlayers;
+  quiz_player::players gamePlayers;
 
-  { // admin interface?
-    SDL_Surface *adminScreen;
-    adminScreen= SDL_SetVideoMode(screenWidth,screenHeight,16,SDL_HWSURFACE ); // |SDL_FULLSCREEN
-    if (NULL == adminScreen){
-      std::cerr << "Cant set video Mode: " << SDL_GetError() << std::endl;
-      exit (1);
-    }
-    paintRectangleOnSurface(
-      adminScreen,
-      fullScreen,
-      color_red
-      );
-    /*
-     * Admin interface should support:
-     * - deleting players 
-     * - renaming players
-     * - ending the game
-     * - continuing the game
-     *
-     * Note: Adding players is possible in the admin interface but
-     * doesn't need to be a direct administrator feature: Players
-     * can join by pressing an answer key/button (in admin interface
-     * as well as in regular game). The Admin simply has to rename
-     * them.
-     *
-     * For less collision with the keys and buttons,
-     * a mouse interface seems sensible.
-     *
-     * click on players: rename
-     * click on space before players: delete
-     * special area for quit
-     * special area for continue
-     *
-     * admin interface should also blink up pressed buttons to
-     * provide a simple test ability
-     *
-     * admin interface should be called at the start
-     * of the game and between question - when requested
-     * via ESC-key.. or perhaps via red buzzer.
-     */
-    
-    SDL_Flip(adminScreen);
-    SDL_Delay(3000); // why?
-  } // admin interface
-  paintRectangleOnSurface(
-    screen,
-    fullScreen,
-    color_black
-    );
-
-  // create tiling
-  quiz_interface::screenTiling myScreenTiling = 
-    quiz_interface::getScreenTiling(
-      quiz_interface::SCREEN_LAYOUT_LIST,
-      screenWidth,
-      screenHeight
-      );
-
-  { // question
-    std::string questionString = "Fällt Dir gerade eine doofe Frage ein?";
-    SDL_Color answerColors[4]={
-      color_buzzBlue,
-      color_buzzOrange,
-      color_buzzGreen,
-      color_buzzYellow
-      };
-      std::string answerString[4]={
-        "blau - definitiv blau!",
-        "grün - es ist immer grün!",
-        "rot sieht viel besser aus!",
-        "was spricht gegen orange?"
-      };
-    writeQuestionAndAnswers(
-      screen,
-      myScreenTiling,
-      font,
-      color_black,
-      color_white,
-      answerColors,
-      questionString,
-      answerString
-      );
-
-  }
-
+  #define CREATE_SOME_PLAYERS
   
   #ifdef CREATE_SOME_PLAYERS
-  std::string newPlayerName="";
-  { // getting a player name // this has to be changed
-    
-    writeOnSurfaceCentered(
-      screen,"Please enter player name in console!",font,color_white,
-      myScreenTiling.playerArea
-      );
-    SDL_Flip(screen);
-  
-    
-    { // getting a player name
-      cout << "Enter Player name: ";
-      cin >> newPlayerName;
-      cout << endl;
-    }
-    
-    while (""==newPlayerName){ // wait until new player is given
-      sleep(1);
-    }
-    paintRectangleOnSurface(screen,myScreenTiling.playerArea,color_black);
-    writeOnSurfaceCentered(
-      screen,newPlayerName,font,color_white,
-      myScreenTiling.playerArea
-      );
-    SDL_Flip(screen);    
-  }
+  std::string newPlayerName = "noPlayer";
   
   { // add some random players
     unsigned int currentPlayerIndex;
     for (
       currentPlayerIndex = 0;
-      currentPlayerIndex < 0; // 8
+      currentPlayerIndex < 2; // 8
       currentPlayerIndex++
       )
     {
-      quiz_player::player* newPlayer = new quiz_player::player;
-      newPlayer->playerName = newPlayerName+(char)(0x30+currentPlayerIndex);
+      quiz_sources::playerSource newPlayerSource(
+        quiz_sources::PLAYERSOURCETYPE_UNKNOWN,
+        currentPlayerIndex
+        );
+      std::string currentPlayerName = (newPlayerName+(char)(0x30+currentPlayerIndex));
+      gamePlayers.addPlayer(newPlayerSource,currentPlayerName);
+      
+      quiz_player::player* newPlayer = gamePlayers.getPlayerBySource(newPlayerSource);
       newPlayer->sumPoints = currentPlayerIndex*100;
-      players.push_back(newPlayer);
     }
   } // add some random players
   #endif // CREATE_SOME_PLAYERS
   
+  bool terminateGame=false;
+  bool callAdmin = true;
   
+  quiz_question::questions myQuestions = quiz_question::readFile("./xml/questions.xml");
   
+  quiz_question::questions::const_iterator question_iterator;
   
-  unsigned int evoliX=320;
-  unsigned int evoliY=240;
-  drawSprite(screen,eeveepic,evoliX,evoliY);
-  unsigned int remain_seconds = 20;
-
-  unsigned int ticks_at_start = SDL_GetTicks();
-  SDL_Event myEvent;
-  SDL_TimerID my_timer_id = SDL_AddTimer(1000, timeoutCallBack, NULL);
-  { // clear all given answers
-    quiz_player::players_t::iterator player_iterator;
-    for (
-      player_iterator  = gamePlayers.begin();
-      player_iterator != gamePlayers.end();
-      player_iterator++
-      )
-    {
-      (*player_iterator)->givenAnswer = 0;
-    }
-  }
-   
-  
-  SDL_Flip(screen);
-  while(true){
-    //int event_available = SDL_PollEvent (&myEvent);
-    int event_available = SDL_WaitEvent(&myEvent); // saves ressources
-    if (0==event_available){
-      std::cerr << "Error waiting on event" << std::endl;
-      continue;
-    }
-    if (SDL_KEYDOWN==myEvent.type){
-      
-      SDL_KeyboardEvent myKeyEvent = myEvent.key;
-      SDLKey adminKey = SDLK_ESCAPE;
-      if (adminKey == myKeyEvent.keysym.sym){
-        cout << "ESC: Terminate (later: admin)!" << endl;
+  for (
+    question_iterator  = myQuestions.begin();
+    question_iterator != myQuestions.end();
+    question_iterator++
+    )
+  {
+    // todo: choose question randomly
+    if (callAdmin){ // admin interface?
+      if (adminInterface::callInterface(
+        screenWidth,
+        screenHeight,
+        font,
+        color_black,
+        color_white,
+        answerColors,
+        gamePlayers
+        )
+        ==false)
+      { // terminate
+        terminateGame=true;
         break;
       }
-      quiz_player::player* keyPlayer = identify_player(
-        myKeyEvent.keysym.sym,
-        gamePlayers
-        );
-      if (NULL!=keyPlayer){
-        unsigned int reaction_time = SDL_GetTicks() - ticks_at_start;
-        unsigned int givenAnswer = identify_answer(
-          myKeyEvent.keysym.sym
-          );
-        // if player is valid, answer automatically is
-        // we could create a single map-structure instead of two
-        if (keyPlayer->givenAnswer==0){ // or re-answering allowed
-          keyPlayer->responseTime = reaction_time;
-          keyPlayer->givenAnswer = givenAnswer;
-          quiz_interface::paintAllPlayers(
-            screen,
-            myScreenTiling.playerArea,
-            font,
-            color_black,
-            color_white,
-            gamePlayers
-            );
-        }
-        SDL_Flip(screen);
+      callAdmin=false;
+    } // admin interface
+    quiz_question::question currentQuestion = *question_iterator;
+    #ifdef STATIC_QUESTION
+    { // create question
+      currentQuestion.questionString = "Welche Zahl kommt Pi am nächsten?";
+      currentQuestion.answerStrings[0]="3,141592653589793238562643383279502884197169399"; // wrong
+      currentQuestion.answerStrings[1]="3,141592653589793238462643383279502884197169399";
+      currentQuestion.answerStrings[2]="3,141592653589793238462643384279502884197169399";
+      currentQuestion.answerStrings[3]="3,141592663589793238462643383279502884197169399";
+      currentQuestion.correctAnswerIndex = 2;
+    }
+    #endif // STATIC_QUESTION
+    
+    
+    { // do a question 
+      if(quiz_interface::callInterface(
+        screenWidth,
+        screenHeight,
+        font,
+        color_black,
+        color_white,
+        answerColors,
+        gamePlayers,
+        currentQuestion
+        )
+        ==false)
+      { // call admin
+        callAdmin=true;
       }
     }
-    if (SDL_JOYBUTTONDOWN == myEvent.type){
-      unsigned int reaction_time = SDL_GetTicks() - ticks_at_start;
+  } // while not terminate game
       
-      cout << reaction_time << ": JoyButton,";
-      SDL_JoyButtonEvent joystickEvent=myEvent.jbutton;
-      cout << "Joystick " << (int) joystickEvent.which;
-      #define IDENTIFY_BUZZ
-      #ifdef IDENTIFY_BUZZ
-      {
-        buzz_identify(joystickEvent.button);
-      }
-      #endif
-      #ifndef IDENTIFY_BUZZ
-      { 
-        cout << "Button " << (int) joystickEvent.button;
-        cout << endl;
-      }
-      #endif
+  SDL_Delay(500); // why?
+  SDL_Quit();
+  TTF_Quit();
+  return 0;
+  
+  
+  
+  
+  #ifdef TEST_SDL_SPRITES
+  unsigned int evoliX=320;
+  unsigned int evoliY=240;
+  drawSprite(questionScreen,eeveepic,evoliX,evoliY);
+  #endif // TEST_SDL_SPRITES
+  
+  SDL_Event myEvent;
+   
+  
+  while(!terminateGame){
+    if (SDL_JOYBUTTONDOWN == myEvent.type){
+      
+      #ifdef TEST_SDL_SPRITES // move evoli
       if (joystickEvent.button%5==0){
         SDL_Rect blackRectangle;
         blackRectangle.x = evoliX;
@@ -539,61 +269,12 @@ int main(void){
           case 3: evoliY-=5; break;
           default: break;// nothing
         }
-        drawSprite(screen,eeveepic,evoliX,evoliY);
+        drawSprite(questionScreen,eeveepic,evoliX,evoliY);
       }
-      { // color rectangle somewhere
-        SDL_Rect colorRectangle;
-        colorRectangle.x = 0;
-        colorRectangle.y = 0;
-        colorRectangle.w = 64;
-        colorRectangle.h = 64;
-        
-        SDL_Color myColor;
-        switch (joystickEvent.button%5){
-          case BUZZ_YELLOW:  myColor=color_buzzYellow; break;
-          case BUZZ_GREEN:  myColor=color_buzzGreen ; break;
-          case BUZZ_ORANGE:  myColor=color_buzzOrange; break;
-          case BUZZ_BLUE:  myColor=color_buzzBlue  ; break;
-          default: myColor=color_buzzRed   ; break;
-        } // switch
-          
-        paintRectangleOnSurface(screen,colorRectangle,myColor);
-        SDL_Flip(screen);
-      } // color rectangle
-          
-
-      
-      
-    }
-    if (SDL_MOUSEBUTTONDOWN == myEvent.type){
-    }
-    if (SDL_USEREVENT == myEvent.type){
-      remain_seconds--;
-      std::stringstream output;
-      output << "noch " << remain_seconds << " Sekunden";
-      if (0==remain_seconds){
-        SDL_RemoveTimer(my_timer_id);
-        output.str("Frage vorbei!");
-      }
-      quiz_interface::paintRemainingTime(
-        screen,
-        myScreenTiling.timerArea,
-        font,
-        output.str(),
-        20, // maximum of 20 seconds
-        remain_seconds,
-        color_black,
-        color_white,
-        color_red,
-        color_green
-        );
-      SDL_Flip(screen);
-    }
-    if (remain_seconds == 0){
-      break;
+      #endif // TEST_SDL_SPRITES
     }
   }
-  SDL_Delay(3000); // why?
+  SDL_Delay(500); // why?
   SDL_Quit();
   TTF_Quit();
   return 0;

@@ -5,7 +5,7 @@ uint8_t buzz_identify_buzzer(uint8_t givenButton){
 }
 
 buzz_button buzz_identify_button(uint8_t givenButton){
-  return (buzz_button)givenButton%5;
+  return (buzz_button)(givenButton%5);
 }
 
 

@@ -1,4 +1,5 @@
 #include <sstream>
+#include <iostream>
 
 #include "drawhelper.h"
 
@@ -11,35 +12,69 @@ void quiz_interface::paintPlayer(
   SDL_Surface* target,
   SDL_Rect screenArea,
   TTF_Font* font,
-  SDL_Color color,
-  quiz_player::player givenPlayer
+  SDL_Color color_text,
+  SDL_Color color_answer[4],
+  quiz_player::player givenPlayer,
+  bool showAnswer
   )
 {
   SDL_Rect pointRect=screenArea;
   SDL_Rect nameRect =screenArea;
   SDL_Rect timeRect =screenArea;
+  SDL_Rect answerRect1 = screenArea;
+  SDL_Rect answerRect2 = screenArea;
   { // create subDivision
     unsigned int subFieldHeight=screenArea.h/4;
     pointRect.h = subFieldHeight;
     nameRect.h = subFieldHeight;
     timeRect.h = subFieldHeight;
     pointRect.y = screenArea.y + 1*subFieldHeight;
-    nameRect.y = screenArea.y + 2*subFieldHeight;
-    timeRect.y = screenArea.y + 3*subFieldHeight;
+    nameRect.y  = screenArea.y + 2*subFieldHeight;
+    timeRect.y  = screenArea.y + 3*subFieldHeight;
     // x and w can stay the same - for this layout
-  }
     
+    answerRect1.h = answerRect1.h/2;
+    answerRect1.w = answerRect1.h;
+    answerRect1.y = answerRect1.y + answerRect1.h/2;
+    
+    answerRect2 = answerRect1;
+    answerRect2.x = answerRect2.x + screenArea.w - answerRect2.w;
+    
+    answerRect1.x+=answerRect1.h;
+    answerRect2.x-=answerRect2.h;
+  }
+  
+  { // given Answer
+    if (showAnswer){ // if answers are to be shown
+      if (givenPlayer.givenAnswer != 0){ // if player answered
+        paintRectangleOnSurface(
+          target,
+          answerRect1,
+          color_answer[givenPlayer.givenAnswer-1]
+          );
+        paintRectangleOnSurface(
+          target,
+          answerRect2,
+          color_answer[givenPlayer.givenAnswer-1]
+          );
+      }
+    }
+  }
+        
   { // points
     std::stringstream pointStream;
     pointStream << std::dec << givenPlayer.sumPoints;
+    if (showAnswer){
+      pointStream << " + " << givenPlayer.plusPoints;
+    }
     pointStream << " Points";
     writeOnSurfaceCentered(
-      target,pointStream.str(),font,color,
+      target,pointStream.str(),font,color_text,
       pointRect
       );
   }
   writeOnSurfaceCentered(
-    target,givenPlayer.playerName,font,color,
+    target,givenPlayer.playerName,font,color_text,
     nameRect
     );
   { // time - if already an answer was given
@@ -55,7 +90,7 @@ void quiz_interface::paintPlayer(
         time = convertStream.str();
       }
       writeOnSurfaceCentered(
-        target,time,font,color,
+        target,time,font,color_text,
         timeRect
         );
     }
@@ -184,6 +219,17 @@ void quiz_interface::writeQuestionAndAnswers(
       color_answer[currentAnswer]
       );
     
+    // write a small number into the colored square
+    std::stringstream answerIndexStream;
+    answerIndexStream << (currentAnswer+1);
+    writeOnSurfaceCentered(
+      target,
+      answerIndexStream.str(),
+      font,
+      color_background,
+      myScreenTiling.answerColorArea[currentAnswer]
+      );
+    
     // clear text area
     paintRectangleOnSurface(
       target,
@@ -250,6 +296,27 @@ void quiz_interface::paintRemainingTime(
     }
   }
 }
+void quiz_interface::showAdminNotify(
+  SDL_Surface* target,
+  TTF_Font* font,
+  SDL_Color color_text
+  )
+{
+  SDL_Rect adminRect;
+  {
+    adminRect.x=0;
+    adminRect.y=0;
+    adminRect.w=0; // ignored
+    adminRect.h=30;
+  }
+  writeOnSurfaceVCentered(
+    target,
+    "Admin requested",
+    font,
+    color_text,
+    adminRect
+    );
+}
 
 
 void quiz_interface::paintAllPlayers(
@@ -258,7 +325,9 @@ void quiz_interface::paintAllPlayers(
   TTF_Font* font,
   SDL_Color color_background,
   SDL_Color color_text,
-  quiz_player::players_t givenPlayers
+  SDL_Color color_answer[4],
+  quiz_player::players_t givenPlayers,
+  bool showAnswer
   )
 {
   unsigned int playerCount = givenPlayers.size();
@@ -335,7 +404,9 @@ void quiz_interface::paintAllPlayers(
         currentPlayerRect,
         font,
         color_text,
-        **player_iterator
+        color_answer,
+        **player_iterator,
+        showAnswer
         );
       currentPlayerRect.x += currentPlayerRect.w; // move to right
       if (
@@ -350,6 +421,272 @@ void quiz_interface::paintAllPlayers(
   } // print the players
 }
 
+Uint32 quiz_interface::timeoutCallBack(Uint32 interval, void *param){
+  static unsigned int passedSeconds=0;
+  passedSeconds++;
+  //std::cout << "A Second has passed!" << std::endl;
+
+  SDL_Event event;
+  SDL_UserEvent userevent;
   
+  /* In this example, our callback pushes an SDL_USEREVENT event
+  into the queue, and causes ourself to be called again at the
+  same interval: */
+  
+  userevent.type = SDL_USEREVENT;
+  userevent.code = 0;
+  userevent.data1 = NULL;
+  userevent.data2 = NULL;
+  
+  event.type = SDL_USEREVENT;
+  event.user = userevent;
+  
+  SDL_PushEvent(&event);
+  return(interval);
+}
+
+
+bool quiz_interface::callInterface(
+  unsigned int screenWidth,
+  unsigned int screenHeight,
+  TTF_Font* font,
+  SDL_Color color_background,
+  SDL_Color color_text,
+  SDL_Color answerColors[4],
+  quiz_player::players& playerList,
+  quiz_question::question currentQuestion
+  )
+{
+  SDL_Surface *questionScreen;
+  questionScreen= SDL_SetVideoMode(screenWidth,screenHeight,16,SDL_HWSURFACE  |SDL_FULLSCREEN); // |SDL_FULLSCREEN
+  if (NULL == questionScreen){
+    std::cerr << "Cant set video Mode: " << SDL_GetError() << std::endl;
+    exit (1);
+  }
+  screenTiling myScreenTiling=getScreenTiling(SCREEN_LAYOUT_LIST,screenWidth,screenHeight);
+  { // write the question and available answers
+    writeQuestionAndAnswers(
+      questionScreen,
+      myScreenTiling,
+      font,
+      color_background,
+      color_text,
+      answerColors,
+      currentQuestion.questionString,
+      currentQuestion.answerStrings
+      );
+  }
+  const unsigned int maximumTime = 15;
+  
+  // these definitions probably should get their own argument
+  SDL_Color color_red   = {0xff,0x00,0x00};
+  SDL_Color color_green = {0x00,0xff,0x00};
+
+  { // print first time bar (full)
+    std::stringstream output;
+    output << "noch " << maximumTime << " Sekunden";
+    quiz_interface::paintRemainingTime(
+      questionScreen,
+      myScreenTiling.timerArea,
+      font,
+      output.str(),
+      maximumTime, // nothing gone
+      maximumTime, 
+      color_text,
+      color_background,
+      color_red,
+      color_green
+      );
+  }
+  { // clear all given answers
+    playerList.clearAnswers();
+  }
+  { // paint the players
+    quiz_interface::paintAllPlayers(
+      questionScreen,
+      myScreenTiling.playerArea,
+      font,
+      color_background,
+      color_text,
+      answerColors,
+      playerList.getPlayerList(),
+      false
+      );
+  }
+  // finally, show the screen
+  SDL_Flip(questionScreen);
+
+  // and start counting
+  unsigned int remain_seconds = maximumTime;
+  unsigned int ticks_at_start = SDL_GetTicks();
+  bool adminRequested = false;
+  SDL_Event myEvent;
+  SDL_TimerID my_timer_id = SDL_AddTimer(1000, timeoutCallBack, NULL);
+  
+  while(true){
+    //int event_available = SDL_PollEvent (&myEvent);
+    int event_available = SDL_WaitEvent(&myEvent); // saves ressources
+    if (0==event_available){
+      std::cerr << "Error waiting on event" << std::endl;
+      continue;
+    }
+    if (SDL_KEYDOWN==myEvent.type){ // key pressed
+      unsigned int reaction_time = SDL_GetTicks() - ticks_at_start;
+      
+      SDL_KeyboardEvent myKeyEvent = myEvent.key;
+      SDLKey adminKey = SDLK_ESCAPE;
+      if (adminKey == myKeyEvent.keysym.sym){
+        adminRequested=true; 
+        showAdminNotify(
+          questionScreen,
+          font,
+          color_red
+          );
+        
+        
+      }
+      
+      quiz_sources::sourceAnswerCombi mySourceAnswerCombi(myKeyEvent.keysym.sym);
+      
+      storePlayerAnswer(mySourceAnswerCombi,playerList,reaction_time);
+    }
+    if (SDL_JOYBUTTONDOWN == myEvent.type){ // joystickpressed (buzz)
+      unsigned int reaction_time = SDL_GetTicks() - ticks_at_start;
+      SDL_JoyButtonEvent joystickEvent=myEvent.jbutton;
+      
+      // get source from button
+      quiz_sources::sourceAnswerCombi mySourceAnswerCombi(joystickEvent);
+      
+      if (mySourceAnswerCombi.answerIndex==0){ // red button - call admin
+        adminRequested=true; 
+        showAdminNotify(
+          questionScreen,
+          font,
+          color_red
+          );
+      }
+      
+      storePlayerAnswer(mySourceAnswerCombi,playerList,reaction_time);
+    }
+    if (SDL_USEREVENT == myEvent.type){ // userevent - a second passed
+      remain_seconds--;
+      std::stringstream output;
+      output << "noch " << remain_seconds << " Sekunden";
+      if (0==remain_seconds){
+        SDL_RemoveTimer(my_timer_id);
+        output.str("Frage vorbei!");
+      }
+      // update the timer bar
+      quiz_interface::paintRemainingTime(
+        questionScreen,
+        myScreenTiling.timerArea,
+        font,
+        output.str(),
+        maximumTime, 
+        remain_seconds,
+        color_text,
+        color_background,
+        color_red,
+        color_green
+        );
+      SDL_Flip(questionScreen);
+    }
+    if (remain_seconds == 0){
+      break;
+    }
+        
+    { // update the players
+      quiz_interface::paintAllPlayers(
+        questionScreen,
+        myScreenTiling.playerArea,
+        font,
+        color_background,
+        color_text,
+        answerColors,
+        playerList.getPlayerList(),
+        false
+        );
+    }
+    // finally, show the screen
+    SDL_Flip(questionScreen);
+  } // while (true)
+
+  { // at this point, we should present the correct answer
+    SDL_Color correctColors[4];
+    unsigned int answerIndex;
+    for (
+      answerIndex  = 1;
+      answerIndex <= 4;
+      answerIndex++
+      )
+    {
+      SDL_Color thisColor = {0x00,0x00,0x00};
+      if (answerIndex == currentQuestion.correctAnswerIndex){
+        // answerColors go 0 -> 3, answerIndex fo 1->4, so subtract 1
+        thisColor = answerColors[answerIndex-1];
+      }
+      correctColors[answerIndex-1] = thisColor;
+    }
+    writeQuestionAndAnswers(
+      questionScreen,
+      myScreenTiling,
+      font,
+      color_background,
+      color_text,
+      correctColors,
+      currentQuestion.questionString,
+      currentQuestion.answerStrings
+      );
+  } // present correct answer
+  
+  { // award points
+    playerList.calculatePoints(currentQuestion.correctAnswerIndex);    
+  }
+  
+  { // and show who answered what
+    quiz_interface::paintAllPlayers(
+      questionScreen,
+      myScreenTiling.playerArea,
+      font,
+      color_background,
+      color_text,
+      answerColors,
+      playerList.getPlayerList(),
+      true
+      );
+  }
+  SDL_Flip(questionScreen);
+  SDL_Delay(6000); // so players have time to wonder
+  
+  { // afterwards, really add the points
+    playerList.awardPoints();
+  }
+  
+  // return false to call admin, true to simply continue
+  return !adminRequested;
+}
+
+void quiz_interface::storePlayerAnswer(
+  const quiz_sources::sourceAnswerCombi givenSourceAnswer,
+  quiz_player::players& playerList,
+  const unsigned int reaction_time
+  )
+{
+  if (0==givenSourceAnswer.answerIndex){ // no answer given
+    // nothing to do
+    return;
+  }
+  quiz_player::player* activePlayer = playerList.getPlayerBySource(givenSourceAnswer.sourceController);
+  if (NULL==activePlayer){ // no player found 
+    std::cerr << "quiz_interface::storePlayerAnswer: Strange - player could not be found" << std::endl;
+    return;
+  }
+  if (activePlayer->givenAnswer==0){ // has not yet answered
+    // we could allow re-answering in another mode
+    activePlayer->responseTime = reaction_time;
+    activePlayer->givenAnswer = givenSourceAnswer.answerIndex;
+  }
+}
+
   
   

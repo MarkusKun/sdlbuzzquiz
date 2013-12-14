@@ -5,25 +5,21 @@
 #include <vector>
 #include <map>
 
+#include <SDL.h> // for SDLKey
+
+#include "quiz_sources.h"
+
 namespace quiz_player{
   struct player{
     std::string playerName;
     unsigned int responseTime; // milliseconds
     unsigned int givenAnswer; // 0: no answer given yet
     unsigned int sumPoints; // sum of points
+    unsigned int plusPoints; // new points for this question
+    player(std::string newPlayerName = "NoName");
   };
   
-  enum playerSourceType{
-    PLAYERSOURCETYPE_UNKNOWN,
-    PLAYERSOURCETYPE_KEYBOARD,
-    PLAYERSOURCETYPE_BUZZ,
-    PLAYERSOURCETYPE_NETWORK // DS players?
-  };
   
-  struct playerSource{
-    playerSourceType  sourceType;
-    unsigned int      controllerIndex;
-  };
   /*
    * controllerIndex can be
    *  index of keyboardPlayers
@@ -36,16 +32,43 @@ namespace quiz_player{
 
   typedef std::vector<player*> players_t;
   
+  
+  
   class players{
     private:
-      std::map<playerSource,player*> source2playerMap; 
+      std::map<quiz_sources::playerSource,player*> source2playerMap; 
     public:
       players_t getPlayerList() const;
       //! returns an index for this player
-      unsigned int getPlayerNumber(player* searchPlayer);
-      void addPlayer(playerSource myPlayerSource,player* newPlayer);
+      unsigned int getPlayerNumber(player* searchPlayer)const;
+      //void addPlayer(quiz_sources::playerSource myPlayerSource,player* newPlayer);
+      //! create with zero points and without response
+      void addPlayer(quiz_sources::playerSource myPlayerSource,std::string newPlayerName);
+      
+      /*!
+       * \brief remove the given player
+       *
+       * This function removes the player from the map (if she exists in map)
+       * and also deletes the player object. Afterwards, the pointer is 
+       * no longer valid!
+       */
       void removePlayer(player* toDelPlayer);
-      void removePlayer(playerSource toDelSource);
+      //! set given answers and newpoints to 0 (call before a question)
+      void clearAnswers();
+      //! number of players
+      unsigned int size()const;
+      //! calculate points for all players
+      void calculatePoints(const unsigned int correctAnswerIndex);
+      //! award points to all players who deserve them
+      void awardPoints();
+      
+      std::string debugPrintKnown();
+      /*!
+       * this function is authorized to create the player if needed.
+       */
+      player* getPlayerBySource(
+        quiz_sources::playerSource myPlayerSource
+        );
   }; // class players
   
 }; // namespace quiz_player

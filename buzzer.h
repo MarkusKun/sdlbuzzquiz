@@ -11,7 +11,7 @@ typedef enum {
   BUZZ_BLUE=4
 } buzz_button;
 
-// translates a button number to the buzzer handheld
+// translates a button number to the buzzer handheld (0->3)
 uint8_t buzz_identify_buzzer(uint8_t givenButton);
 
 // translates a button number to the buzzer color
