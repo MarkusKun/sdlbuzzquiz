@@ -1,0 +1,40 @@
+<!ELEMENT gameconfig ((
+  randomize_questions |
+  randomize_answers   |
+  preshow_answers     |
+  allow_redecision    |
+  reuse_questions     |
+  scoring             |
+  timing              |
+  graphics            |
+  import
+  )*) >
+  
+<!ELEMENT randomize_questions (#PCDATA)> <!-- shuffle questions? -->
+<!ELEMENT randomize_answers (#PCDATA)>  <!-- shuffle answers? -->
+<!ELEMENT preshow_answers (#PCDATA)>    <!-- show all given answers before timeout? -->
+<!ELEMENT allow_redecision (#PCDATA)>   <!-- allow switching answers? -->
+<!ELEMENT reuse_questions (#PCDATA)>    <!-- insert questions after answering and deleting -->
+<!ELEMENT import (#PCDATA)>           <!-- load another xml-file -->
+
+<!ELEMENT scoring (correct*,incorrect*,nothing?,decay?)>
+
+<!ELEMENT correct (#PCDATA)> <!-- points for correct answers (by order) -->
+<!ELEMENT incorrect (#PCDATA)><!-- points for incorrect answers (by order) -->
+<!ELEMENT nothing (#PCDATA)> <!-- points for not answering -->
+<!ELEMENT decay (#PCDATA)> <!-- what points are worth (in percent) after one round) -->
+
+<!ELEMENT timing (questionTime, answerTime, earlyFinish)>
+<!ELEMENT questionTime (#PCDATA)> <!-- time for answering the question -->
+<!ELEMENT answerTime (#PCDATA)> <!-- time that correct answer and points are displayed -->
+<!ELEMENT earlyFinish (#PCDATA)> <!-- finish when all have answered -->
+
+<!ELEMENT graphics (screenwidth, screenheight, fullscreen, fontsize*)>
+<!ELEMENT screenwidth (#PCDATA)> 
+<!ELEMENT screenheight (#PCDATA)>
+<!ELEMENT fullscreen (#PCDATA)>
+
+<!ELEMENT fontsize (#PCDATA)>
+<!ATTLIST fontsize 
+  type (default, question, answer, players, times, points) default>
+  

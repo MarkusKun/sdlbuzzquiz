@@ -1,0 +1,36 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE gameconfig SYSTEM "quizconfig.dtd">
+<gameconfig>
+  <randomize_questions>true</randomize_questions>
+  <randomize_answers>true</randomize_answers>
+  <preshow_answers>false</preshow_answers>
+  <allow_redecision>false</allow_redecision>
+  <reuse_questions>true</reuse_questions>
+
+  <scoring>
+    <correct>1000</correct>
+    <correct>500</correct>
+    <correct>250</correct>
+    <correct>125</correct>
+    <correct>100</correct>
+    <incorrect>0</incorrect>
+    <nothing>50</nothing>
+    <decay>5</decay>
+  </scoring>
+  
+  <timing>
+    <questionTime>20</questionTime>
+    <answerTime>6</answerTime>
+    <earlyFinish>true</earlyFinish>
+  </timing>
+  
+  <graphics>
+    <screenwidth>1024</screenwidth>
+    <screenheight>768</screenheight>
+    <fullscreen>true</fullscreen>
+    <fontsize>20</fontsize>
+  </graphics>
+   
+  <import>./xml/questions.xml</import>
+</gameconfig>
+
